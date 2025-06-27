@@ -109,10 +109,9 @@
     </div>
 
 <script>
-    // KROK 6: Wklej tutaj NOWY adres URL wygenerowany w KROKU 4
-    const SCRIPT_URL_DO_DANYCH = "TUTAJ_WLEJ_NOWY_URL_Z_KROKU_4";
+    // URL Aplikacji Internetowej z Google Apps Script - teraz jest już wklejony!
+    const SCRIPT_URL_DO_DANYCH = "https://script.google.com/macros/s/AKfycbzZPWpvcg9V7y9gXCMDg86o54LQhT-8kGkCMqrTZSxyUodDXtYH4IkRvgPWAcKqAL-Cpw/exec";
 
-    // --- Reszta kodu pozostaje bez zmian ---
     let daneOferty = {};
     let aktywneUstawieniaAdmina = {};
     let aktywnaListaId = null;
@@ -145,14 +144,9 @@
     };
     
     document.addEventListener('DOMContentLoaded', () => {
-        if (SCRIPT_URL_DO_DANYCH === "TUTAJ_WLEJ_NOWY_URL_Z_KROKU_4") {
-            alert("UWAGA: Musisz wkleić swój adres URL skryptu do pliku HTML w linijce 'const SCRIPT_URL_DO_DANYCH = ...'");
-            return;
-        }
         pobierzUstawieniaZArkusza();
     });
 
-    // --- LOGIKA LOGOWANIA ---
     const POPRAWNE_HASLO = "ZielonaEnergia2025";
     const HASLO_WLASCICIELA = "admin";
     document.getElementById('przycisk-zaloguj').addEventListener('click', () => {
@@ -185,6 +179,7 @@
         document.getElementById(`etap${numerEtapu}`)?.classList.remove('ukryty');
     };
     
+    // PRZYWRÓCONA, PEŁNA BAZA PRODUKTÓW
     const BAZA_PRODUKTOW_UI = {
         "zestawy_sieciowe":{
             "TRAPEZ":[
@@ -384,7 +379,7 @@
                 {"name":"EKIERKI INWAZYJNE ZESTAW 11,025 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":43985.00},
                 {"name":"EKIERKI INWAZYJNE ZESTAW 11,55 KWP LONGI 525 + DEYE SUN-12K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":44740.00},
                 {"name":"EKIERKI INWAZYJNE ZESTAW 12,075 KWP LONGI 525 + DEYE SUN-10K-G06 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":45495.00},
-                {"name":"EKIERKI INWAZYJNE ZESTAW 12,6 KWP LONGI 525 + DEYE SUN-12K-G06 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":46280.00},
+                {"name":"EKIERKI INWAZYJNE ZESTAW 12,6 KWP LONGI 525 + DEYE SUN-12K-G06 + MAGAZYN ENERGii LUX-E 5,12 kWh","price":46280.00},
                 {"name":"EKIERKI INWAZYJNE ZESTAW 13,125 KWP LONGI 525 + DEYE SUN-10K-G07 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":47015.00},
                 {"name":"EKIERKI INWAZYJNE ZESTAW 13,65 KWP LONGI 525 + DEYE SUN-12K-G07 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":47740.00},
                 {"name":"EKIERKI INWAZYJNE ZESTAW 14,175 KWP LONGI 525 + DEYE SUN-12K-G08 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":48505.00},
@@ -654,13 +649,14 @@
     };
         
     const zapiszOferteWArkuzu = (dane, numerOferty) => {
+        const daneDoZapisu = { ...dane, numerOferty };
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 15000); 
 
         fetch(SCRIPT_URL_DO_DANYCH, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify(dane),
+            body: JSON.stringify(daneDoZapisu),
             signal: controller.signal
         })
         .then(response => {
@@ -670,7 +666,11 @@
         })
         .then(data => {
             console.log("Odpowiedź z Arkusza:", data);
-            if (!data.includes("OK")) { throw new Error(data); }
+            if (!data.includes("OK")) {
+                alert("Wystąpił błąd po stronie serwera Google. Odpowiedź: " + data);
+            } else {
+                console.log("Oferta zapisana pomyślnie.");
+            }
         })
         .catch(error => {
             clearTimeout(timeoutId);
