@@ -113,7 +113,6 @@
     </div>
 
 <script>
-    // POPRAWIONY ADRES URL SKRYPTU
     const SCRIPT_URL_DO_DANYCH = "https://script.google.com/macros/s/AKfycbz-wMDbcChYn8EGM5qyPjjTNyQygynuyqsjMfAh5wbfm5FbWmiw1tF1vABT_JSxno8S2A/exec";
 
     let daneOferty = {};
@@ -561,20 +560,25 @@
         }
     };
     
+    // Zaktualizowana funkcja z poprawkami na błąd NaN
     const aktualizujPodsumowanieWizualne = () => {
         numerZapisanejOferty = null;
         const getPrice = (element) => (element && element.selectedIndex > 0) ? parseFloat(element.options[element.selectedIndex].getAttribute('data-price')) : 0;
         const getText = (element) => (element && element.selectedIndex > 0) ? element.options[element.selectedIndex].text : "";
+        
         let wybranyZestaw = { text: "", price: 0 };
         if (aktywnaListaId) {
             const aktywnaLista = document.getElementById(aktywnaListaId);
             wybranyZestaw.text = getText(aktywnaLista);
             wybranyZestaw.price = getPrice(aktywnaLista);
         }
+
+        // POPRAWKA: Użycie "|| 0" na zewnątrz parseFloat, aby puste pola były traktowane jak 0, a не NaN.
         const marzaWidocznosc = parseFloat(document.getElementById('marza-widocznosc').value) || 100;
         const nadprowizjaDyrektora = parseFloat(document.getElementById('nadprowizja-dyrektora').value) || 0;
         const nadprowizjaKierownika = parseFloat(document.getElementById('nadprowizja-kierownika').value) || 0;
         const nadprowizjaFirmy = parseFloat(document.getElementById('nadprowizja-firmy').value) || 0;
+
         daneOferty = {
             typPokrycia: { text: getText(document.getElementById('typ-pokrycia')) },
             typInstalacji: { text: getText(document.getElementById('typ-instalacji')) },
@@ -583,19 +587,20 @@
             magazynWysoko: { text: getText(document.getElementById('magazyn-wysokonapieciowy')), price: getPrice(document.getElementById('magazyn-wysokonapieciowy')) },
             dodatkiMagazyn: { text: getText(document.getElementById('dodatki-magazyn')), price: getPrice(document.getElementById('dodatki-magazyn')) },
             dodatkiModuly: { text: getText(document.getElementById('dodatki-moduly')), price: getPrice(document.getElementById('dodatki-moduly')) },
-            przekop: { text: document.getElementById('przekop').options[document.getElementById('przekop').selectedIndex].text, value: document.getElementById('przekop').value, pricePerMeter: parseFloat(document.getElementById('przekop').options[document.getElementById('przekop').selectedIndex].getAttribute('data-price-per-meter') || 0), length: parseFloat(document.getElementById('dlugosc-przekopu').value || 0) },
+            przekop: { text: document.getElementById('przekop').options[document.getElementById('przekop').selectedIndex].text, value: document.getElementById('przekop').value, pricePerMeter: parseFloat(document.getElementById('przekop').options[document.getElementById('przekop').selectedIndex].getAttribute('data-price-per-meter')) || 0, length: parseFloat(document.getElementById('dlugosc-przekopu').value) || 0 },
             klimatyzacja: { text: getText(document.getElementById('klimatyzacja')), price: getPrice(document.getElementById('klimatyzacja')) },
             falownikMagazyn: { text: getText(document.getElementById('falownik-magazyn')), price: getPrice(document.getElementById('falownik-magazyn')) },
-            inneDodatki: { nazwa: document.getElementById('inne-dodatki-nazwa').value, cena: parseFloat(document.getElementById('inne-dodatki-cena').value || 0) },
-            stawkaVat: parseFloat(document.getElementById('stawka-vat').value),
-            marzaProcent: parseFloat(document.getElementById('marza-procent').value || 0),
+            inneDodatki: { nazwa: document.getElementById('inne-dodatki-nazwa').value, cena: parseFloat(document.getElementById('inne-dodatki-cena').value) || 0 },
+            stawkaVat: parseFloat(document.getElementById('stawka-vat').value) || 0,
+            marzaProcent: parseFloat(document.getElementById('marza-procent').value) || 0,
             nazwaGrupy: document.getElementById('nazwa-grupy').value,
             klient: { imie: document.getElementById('klient-imie').value, adres: document.getElementById('klient-adres').value, kod: document.getElementById('klient-kod').value, telefon: document.getElementById('klient-telefon').value, email: document.getElementById('klient-email').value },
             handlowiec: { imie: document.getElementById('ph-imie').value, telefon: document.getElementById('ph-telefon').value, email: document.getElementById('ph-email').value, teren: document.getElementById('ph-teren').value },
             nadprowizje: { dyrektor: nadprowizjaDyrektora, kierownik: nadprowizjaKierownika, firma: nadprowizjaFirmy },
             ustawieniaMarzy: { widocznosc: marzaWidocznosc }
         };
-        let kosztPodstawowy = daneOferty.zestawPV.price + daneOferty.magazynNisko.price + daneOferty.magazynWysoko.price + daneOferty.dodatkiMagazyn.price + daneOferty.dodatkiModuly.price + (daneOferty.przekop.pricePerMeter > 0 ? daneOferty.przekop.pricePerMeter * daneOferty.przekop.length : 0) + daneOferty.klimatyzacja.price + daneOferty.falownikMagazyn.price + daneOferty.inneDodatki.cena;
+
+        let kosztPodstawowy = daneOferty.zestawPV.price + daneOferty.magazynNisko.price + daneOferty.magazynWysoko.price + daneOferty.dodatkiMagazyn.price + daneOferty.dodatkiModuly.price + (daneOferty.przekop.pricePerMeter * daneOferty.przekop.length) + daneOferty.klimatyzacja.price + daneOferty.falownikMagazyn.price + daneOferty.inneDodatki.cena;
         const sumaNadprowizji = daneOferty.nadprowizje.dyrektor + daneOferty.nadprowizje.kierownik + daneOferty.nadprowizje.firma;
         const kosztBazowy = (kosztPodstawowy > 0) ? (kosztPodstawowy + sumaNadprowizji) : 0;
         const wartoscMarzyCalkowita = kosztBazowy * (daneOferty.marzaProcent / 100);
