@@ -113,7 +113,7 @@
     </div>
 
 <script>
-    // UWAGA: Upewnij się, że ten adres URL jest poprawny i publicznie dostępny.
+    // POPRAWIONY ADRES URL SKRYPTU
     const SCRIPT_URL_DO_DANYCH = "https://script.google.com/macros/s/AKfycbz-wMDbcChYn8EGM5qyPjjTNyQygynuyqsjMfAh5wbfm5FbWmiw1tF1vABT_JSxno8S2A/exec";
 
     let daneOferty = {};
@@ -664,14 +664,11 @@
     };
     
     const zapiszOferteWArkuzu = (dane, numerOferty) => {
-        // Przygotowanie obiektu do zapisu - łączymy dane bazowe z obliczonymi
         const daneDoZapisu = {
             ...dane,
             ...dane.obliczenia,
             numerOferty: numerOferty
         };
-        
-        // Usuwamy tylko jeden zagnieżdżony obiekt, resztę zostawiamy, aby skrypt Apps Script miał do nich dostęp
         delete daneDoZapisu.obliczenia;
 
         const controller = new AbortController();
