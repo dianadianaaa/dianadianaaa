@@ -125,7 +125,6 @@
         fetch(SCRIPT_URL_DO_DANYCH)
             .then(response => {
                 if (!response.ok) {
-                    // Jeśli wystąpi błąd sieciowy (np. CORS), wejdzie tutaj
                     throw new Error('Błąd sieci: ' + response.statusText);
                 }
                 return response.json();
@@ -145,7 +144,6 @@
             })
             .catch(error => {
                 console.error("Błąd podczas pobierania ustawień z Arkusza:", error);
-                // Ten alert może się pojawić z powodu błędu CORS
                 alert("Nie udało się załadować konfiguracji z Arkusza Google. Sprawdź, czy skrypt jest poprawnie wdrożony i ma uprawnienia dostępu ('Każdy'). Błąd: " + error.message);
             });
     };
