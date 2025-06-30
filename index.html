@@ -76,6 +76,10 @@
                     <label for="nadprowizja-firmy">Dodatkowa marża dla firmy (PLN netto):</label>
                     <input type="number" class="admin-input" id="nadprowizja-firmy" value="0" min="0">
                     <hr>
+                    <h3>Inne Ustawienia</h3>
+                    <label for="nazwa-grupy">Nazwa grupy na ofercie:</label>
+                    <input type="text" class="admin-input" id="nazwa-grupy" placeholder="np. POMORZE">
+                    <hr>
                     <label for="marza-widocznosc">Widoczność marży dla PH (%):</label>
                     <input type="number" class="admin-input" id="marza-widocznosc" value="100" min="0" max="100">
                 </div>
@@ -133,6 +137,7 @@
                 document.getElementById('nadprowizja-dyrektora').value = settings['nadprowizja-dyrektora'] || 0;
                 document.getElementById('nadprowizja-kierownika').value = settings['nadprowizja-kierownika'] || 0;
                 document.getElementById('nadprowizja-firmy').value = settings['nadprowizja-firmy'] || 0;
+                document.getElementById('nazwa-grupy').value = settings['nazwa-grupy'] || ''; // Dodane dla nazwy grupy
                 document.getElementById('marza-widocznosc').value = settings['marza-widocznosc'] || 100;
                 document.querySelectorAll('.admin-input').forEach(input => input.readOnly = true);
                 aktualizujPodsumowanieWizualne();
@@ -194,7 +199,18 @@
                 {"name":"TRAPEZ ZESTAW 7,875 KWP LONGI 525 + DEYE SUN-8K-G05","price":22950.00},
                 {"name":"TRAPEZ ZESTAW 8,4 KWP LONGI 525 + DEYE SUN-8K-G05","price":23640.00},
                 {"name":"TRAPEZ ZESTAW 8,925 KWP LONGI 525 + DEYE SUN-8K-G05","price":24320.00},
-                {"name":"TRAPEZ ZESTAW 9,45 KWP LONGI 525 + DEYE SUN-10K-G05","price":24990.00}
+                {"name":"TRAPEZ ZESTAW 9,45 KWP LONGI 525 + DEYE SUN-10K-G05","price":24990.00},
+                {"name":"TRAPEZ ZESTAW 9,975 KWP LONGI 525 + DEYE SUN-10K-G05", "price": 25650.00},
+                {"name":"TRAPEZ ZESTAW 10,5 KWP LONGI 525 + DEYE SUN-10K-G05", "price": 26200.00},
+                {"name":"TRAPEZ ZESTAW 11,025 KWP LONGI 525 + DEYE SUN-10K-G05", "price": 26850.00},
+                {"name":"TRAPEZ ZESTAW 11,55 KWP LONGI 525 + DEYE SUN-12K-G05", "price": 27500.00},
+                {"name":"TRAPEZ ZESTAW 12,075 KWP LONGI 525 + DEYE SUN-10K-G06", "price": 28150.00},
+                {"name":"TRAPEZ ZESTAW 12,6 KWP LONGI 525 + DEYE SUN-12K-G06", "price": 28830.00},
+                {"name":"TRAPEZ ZESTAW 13,125 KWP LONGI 525 + DEYE SUN-10K-G07", "price": 29460.00},
+                {"name":"TRAPEZ ZESTAW 13,65 KWP LONGI 525 + DEYE SUN-12K-G07", "price": 30080.00},
+                {"name":"TRAPEZ ZESTAW 14,175 KWP LONGI 525 + DEYE SUN-10K-G08", "price": 30740.00},
+                {"name":"TRAPEZ ZESTAW 14,7 KWP LONGI 525 + DEYE SUN-12K-G08", "price": 31370.00},
+                {"name":"TRAPEZ ZESTAW 15,225 KWP LONGI 525 + DEYE SUN-10K-G09", "price": 32000.00}
             ],
             "BLACHODACHÓWKA":[
                 {"name":"BLACHODACHÓWKA ZESTAW 2,625 KWP LONGI 525 + Deye SUN-3K-G 1F","price":15455.00},
@@ -573,6 +589,7 @@
             inneDodatki: { nazwa: document.getElementById('inne-dodatki-nazwa').value, cena: parseFloat(document.getElementById('inne-dodatki-cena').value || 0) },
             stawkaVat: parseFloat(document.getElementById('stawka-vat').value),
             marzaProcent: parseFloat(document.getElementById('marza-procent').value || 0),
+            nazwaGrupy: document.getElementById('nazwa-grupy').value, // Pobranie nazwy grupy
             klient: { imie: document.getElementById('klient-imie').value, adres: document.getElementById('klient-adres').value, kod: document.getElementById('klient-kod').value, telefon: document.getElementById('klient-telefon').value, email: document.getElementById('klient-email').value },
             handlowiec: { imie: document.getElementById('ph-imie').value, telefon: document.getElementById('ph-telefon').value, email: document.getElementById('ph-email').value, teren: document.getElementById('ph-teren').value },
             nadprowizje: { dyrektor: nadprowizjaDyrektora, kierownik: nadprowizjaKierownika, firma: nadprowizjaFirmy },
@@ -586,7 +603,7 @@
         const sumaNettoFinal = kosztBazowy + wartoscMarzyCalkowita;
         const kwotaVat = sumaNettoFinal * daneOferty.stawkaVat;
         const cenaKoncowa = sumaNettoFinal + kwotaVat;
-        daneOferty.obliczenia = { kosztBazowy, wartoscMarzyCalkowita, sumaNettoFinal, kwotaVat, cenaKoncowa };
+        daneOferty.obliczenia = { kosztBazowy, wartoscMarzyCalkowita, marzaDlaPH, sumaNettoFinal, kwotaVat, cenaKoncowa };
         document.getElementById('koszt-bazowy').textContent = kosztBazowy.toFixed(2);
         document.getElementById('wartosc-marzy').textContent = marzaDlaPH.toFixed(2);
         document.getElementById('suma-netto-final').textContent = sumaNettoFinal.toFixed(2);
@@ -647,7 +664,18 @@
     };
     
     const zapiszOferteWArkuzu = (dane, numerOferty) => {
-        const daneDoZapisu = { ...dane, obliczenia: undefined, numerOferty };
+        // Przygotowanie obiektu do zapisu - łączymy dane bazowe z obliczonymi
+        const daneDoZapisu = {
+            ...dane,
+            ...dane.obliczenia,
+            numerOferty: numerOferty
+        };
+        
+        // Usuwamy zbędne, zagnieżdżone obiekty, aby struktura była płaska
+        delete daneDoZapisu.obliczenia;
+        delete daneDoZapisu.nadprowizje;
+        delete daneDoZapisu.ustawieniaMarzy;
+
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 15000); 
 
@@ -701,6 +729,13 @@
         doc.setTextColor(51, 51, 51);
         doc.text(`Nr oferty: ${numerOfertyDoPDF}`, 195, 30, { align: 'right' });
         doc.text(`Data: ${dzisiaj.toLocaleDateString('pl-PL')}`, 195, 35, { align: 'right' });
+        
+        // Dodanie Nazwy Grupy do PDF
+        if (daneOferty.nazwaGrupy) {
+            doc.setFont('helvetica', 'bold');
+            doc.text(`Grupa: ${daneOferty.nazwaGrupy}`, 195, 40, { align: 'right' });
+        }
+
         let y = 55;
         doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
@@ -737,9 +772,7 @@
             styles: { font: 'helvetica', cellPadding: 2.5 }, columnStyles: { 0: { cellWidth: 10 } }
         });
         y = doc.lastAutoTable.finalY + 10;
-        const { sumaNettoFinal, kwotaVat, cenaKoncowa, wartoscMarzyCalkowita } = daneOferty.obliczenia;
-        const widocznosc = daneOferty.ustawieniaMarzy.widocznosc / 100;
-        const marzaDlaPH = wartoscMarzyCalkowita * widocznosc;
+        const { sumaNettoFinal, kwotaVat, cenaKoncowa, marzaDlaPH } = daneOferty.obliczenia;
         
         const cenyBodyKlient = [
             [`Wartosc Netto:`, `${sumaNettoFinal.toFixed(2)} PLN`],
