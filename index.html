@@ -113,6 +113,7 @@
     </div>
 
 <script>
+    // WKLEJONY PRAWIDŁOWY ADRES URL, KTÓRY PODAŁEŚ
     const SCRIPT_URL_DO_DANYCH = "https://script.google.com/macros/s/AKfycbz-wMDbcChYn8EGM5qyPjjTNyQygynuyqsjMfAh5wbfm5FbWmiw1tF1vABT_JSxno8S2A/exec";
 
     let daneOferty = {};
@@ -124,6 +125,7 @@
         fetch(SCRIPT_URL_DO_DANYCH)
             .then(response => {
                 if (!response.ok) {
+                    // Jeśli wystąpi błąd sieciowy (np. CORS), wejdzie tutaj
                     throw new Error('Błąd sieci: ' + response.statusText);
                 }
                 return response.json();
@@ -143,7 +145,8 @@
             })
             .catch(error => {
                 console.error("Błąd podczas pobierania ustawień z Arkusza:", error);
-                alert("Nie udało się załadować konfiguracji z Arkusza Google. Sprawdź konsolę i poprawność adresu URL skryptu oraz jego wdrożenia (uprawnienia dostępu).");
+                // Ten alert może się pojawić z powodu błędu CORS
+                alert("Nie udało się załadować konfiguracji z Arkusza Google. Sprawdź, czy skrypt jest poprawnie wdrożony i ma uprawnienia dostępu ('Każdy'). Błąd: " + error.message);
             });
     };
     
@@ -560,7 +563,6 @@
         }
     };
     
-    // Zaktualizowana funkcja z poprawkami na błąd NaN
     const aktualizujPodsumowanieWizualne = () => {
         numerZapisanejOferty = null;
         const getPrice = (element) => (element && element.selectedIndex > 0) ? parseFloat(element.options[element.selectedIndex].getAttribute('data-price')) : 0;
@@ -573,7 +575,6 @@
             wybranyZestaw.price = getPrice(aktywnaLista);
         }
 
-        // POPRAWKA: Użycie "|| 0" na zewnątrz parseFloat, aby puste pola były traktowane jak 0, a не NaN.
         const marzaWidocznosc = parseFloat(document.getElementById('marza-widocznosc').value) || 100;
         const nadprowizjaDyrektora = parseFloat(document.getElementById('nadprowizja-dyrektora').value) || 0;
         const nadprowizjaKierownika = parseFloat(document.getElementById('nadprowizja-kierownika').value) || 0;
