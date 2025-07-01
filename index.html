@@ -113,7 +113,7 @@
     </div>
 
 <script>
-    // UWAGA: Upewnij się, że ten adres URL jest poprawny i publicznie dostępny.
+    // POPRAWIONY ADRES URL SKRYPTU
     const SCRIPT_URL_DO_DANYCH = "https://script.google.com/macros/s/AKfycbz-wMDbcChYn8EGM5qyPjjTNyQygynuyqsjMfAh5wbfm5FbWmiw1tF1vABT_JSxno8S2A/exec";
 
     let daneOferty = {};
@@ -137,7 +137,7 @@
                 document.getElementById('nadprowizja-dyrektora').value = settings['nadprowizja-dyrektora'] || 0;
                 document.getElementById('nadprowizja-kierownika').value = settings['nadprowizja-kierownika'] || 0;
                 document.getElementById('nadprowizja-firmy').value = settings['nadprowizja-firmy'] || 0;
-                document.getElementById('nazwa-grupy').value = settings['nazwa-grupy'] || ''; // Dodane dla nazwy grupy
+                document.getElementById('nazwa-grupy').value = settings['nazwa-grupy'] || '';
                 document.getElementById('marza-widocznosc').value = settings['marza-widocznosc'] || 100;
                 document.querySelectorAll('.admin-input').forEach(input => input.readOnly = true);
                 aktualizujPodsumowanieWizualne();
@@ -589,7 +589,7 @@
             inneDodatki: { nazwa: document.getElementById('inne-dodatki-nazwa').value, cena: parseFloat(document.getElementById('inne-dodatki-cena').value || 0) },
             stawkaVat: parseFloat(document.getElementById('stawka-vat').value),
             marzaProcent: parseFloat(document.getElementById('marza-procent').value || 0),
-            nazwaGrupy: document.getElementById('nazwa-grupy').value, // Pobranie nazwy grupy
+            nazwaGrupy: document.getElementById('nazwa-grupy').value,
             klient: { imie: document.getElementById('klient-imie').value, adres: document.getElementById('klient-adres').value, kod: document.getElementById('klient-kod').value, telefon: document.getElementById('klient-telefon').value, email: document.getElementById('klient-email').value },
             handlowiec: { imie: document.getElementById('ph-imie').value, telefon: document.getElementById('ph-telefon').value, email: document.getElementById('ph-email').value, teren: document.getElementById('ph-teren').value },
             nadprowizje: { dyrektor: nadprowizjaDyrektora, kierownik: nadprowizjaKierownika, firma: nadprowizjaFirmy },
@@ -664,17 +664,12 @@
     };
     
     const zapiszOferteWArkuzu = (dane, numerOferty) => {
-        // Przygotowanie obiektu do zapisu - łączymy dane bazowe z obliczonymi
         const daneDoZapisu = {
             ...dane,
             ...dane.obliczenia,
             numerOferty: numerOferty
         };
-        
-        // Usuwamy zbędne, zagnieżdżone obiekty, aby struktura była płaska
         delete daneDoZapisu.obliczenia;
-        delete daneDoZapisu.nadprowizje;
-        delete daneDoZapisu.ustawieniaMarzy;
 
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 15000); 
@@ -730,7 +725,6 @@
         doc.text(`Nr oferty: ${numerOfertyDoPDF}`, 195, 30, { align: 'right' });
         doc.text(`Data: ${dzisiaj.toLocaleDateString('pl-PL')}`, 195, 35, { align: 'right' });
         
-        // Dodanie Nazwy Grupy do PDF
         if (daneOferty.nazwaGrupy) {
             doc.setFont('helvetica', 'bold');
             doc.text(`Grupa: ${daneOferty.nazwaGrupy}`, 195, 40, { align: 'right' });
