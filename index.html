@@ -35,6 +35,8 @@
         #przycisk-pdf-klient:hover { background-color: #1a7448; }
         #przycisk-pdf-biuro { background-color: #555; }
         #przycisk-pdf-biuro:hover { background-color: #333; }
+        #przycisk-zapisz-ustawienia { background-color: #f0ad4e; }
+        #przycisk-zapisz-ustawienia:hover { background-color: #ec971f; }
         .ukryty { display: none; }
         #stale-podsumowanie { border: 2px solid #008170; border-radius: 8px; margin-top: 40px; padding: 20px; background-color: #fafffd; }
         #lista-wybranych-elementow { list-style-type: none; padding-left: 0; margin-bottom: 20px; }
@@ -82,6 +84,7 @@
                     <hr>
                     <label for="marza-widocznosc">Widoczność marży dla PH (%):</label>
                     <input type="number" class="admin-input" id="marza-widocznosc" value="100" min="0" max="100">
+                    <button id="przycisk-zapisz-ustawienia">Zapisz Ustawienia na stałe</button>
                 </div>
                 <div id="formularz-danych">
                     <h3>Dane Klienta</h3>
@@ -113,7 +116,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL_DO_DANYCH = "https://script.google.com/macros/s/AKfycbzMTGt-Y9k7b3Rui3IcvT48j6O2jP-_hcrzHmP38r4PK4fpVioIaoZnpj0dbT3m6--H3Q/exec";
+    const SCRIPT_URL_DO_DANYCH = "https://script.google.com/macros/s/AKfycbxvrt9GoDfinZt5MowppCUc70Ex-UzIulu23jjoIWBwJEXVuHfXa0Z3F4cdoDqXKHv3Kw/exec";
 
     let daneOferty = {};
     let aktywneUstawieniaAdmina = {};
@@ -668,24 +671,20 @@
     
     const zapiszOferteWArkuzu = (dane, numerOferty) => {
         const daneDoZapisu = {
+            action: 'saveOffer',
             ...dane,
             ...dane.obliczenia,
             numerOferty: numerOferty
         };
         delete daneDoZapisu.obliczenia;
 
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000); 
-
         fetch(SCRIPT_URL_DO_DANYCH, {
             method: 'POST',
             mode: 'cors',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify(daneDoZapisu),
-            signal: controller.signal
+            body: JSON.stringify(daneDoZapisu)
         })
         .then(response => {
-            clearTimeout(timeoutId);
             if (!response.ok) { throw new Error('Failed to fetch'); }
             return response.text();
         })
@@ -698,9 +697,42 @@
             }
         })
         .catch(error => {
-            clearTimeout(timeoutId);
             console.error("Błąd wysyłania danych do Arkusza Google:", error);
             alert(`Wystąpił krytyczny błąd podczas zapisu do Arkusza Google. Sprawdź konsolę (F12) oraz upewnij się, że skrypt po stronie Google jest poprawnie wdrożony i ma odpowiednie uprawnienia dostępu ('Każdy'). Treść błędu: ${error.message}`);
+        });
+    };
+
+    const zapiszUstawienia = () => {
+        const dataDoZapisu = {
+            action: 'saveSettings',
+            settings: {
+                'nadprowizja-dyrektora': parseFloat(document.getElementById('nadprowizja-dyrektora').value) || 0,
+                'nadprowizja-kierownika': parseFloat(document.getElementById('nadprowizja-kierownika').value) || 0,
+                'nadprowizja-firmy': parseFloat(document.getElementById('nadprowizja-firmy').value) || 0,
+                'marza-widocznosc': parseFloat(document.getElementById('marza-widocznosc').value) || 100,
+                'nazwa-grupy': document.getElementById('nazwa-grupy').value || ''
+            }
+        };
+
+        fetch(SCRIPT_URL_DO_DANYCH, {
+            method: 'POST',
+            mode: 'cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(dataDoZapisu)
+        })
+        .then(response => {
+            if (!response.ok) { throw new Error('Failed to fetch'); }
+            return response.text();
+        })
+        .then(data => {
+            if(data.includes("OK")) {
+                alert("Ustawienia zostały zapisane na stałe!");
+            } else {
+                alert("Wystąpił błąd podczas zapisu ustawień: " + data);
+            }
+        })
+        .catch(error => {
+            alert(`Wystąpił krytyczny błąd podczas zapisu ustawień. Treść błędu: ${error.message}`);
         });
     };
 
@@ -792,7 +824,8 @@
         element.addEventListener('input', aktualizujPodsumowanieWizualne);
         element.addEventListener('change', aktualizujPodsumowanieWizualne);
     });
-
+    
+    document.getElementById('przycisk-zapisz-ustawienia').addEventListener('click', zapiszUstawienia);
     document.getElementById('typ-pokrycia').addEventListener('change', () => {
         aktywnaListaId = null;
         odswiezWszystkieListy();
