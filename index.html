@@ -115,7 +115,10 @@
     </div>
 
 <script>
-    const SCRIPT_URL_DO_DANYCH = "https://script.google.com/macros/s/AKfycbxvrt9GoDfinZt5MowppCUc70Ex-UzIulu23jjoIWBwJEXVuHfXa0Z3F4cdoDqXKHv3Kw/exec";
+    // ##### POCZĄTEK KONFIGURACJI #####
+    // WKLEJ TUTAJ SWÓJ NOWY ADRES URL APLIKACJI INTERNETOWEJ
+    const SCRIPT_URL_DO_DANYCH = "https://script.google.com/macros/s/AKfycbxqRRqpc-CJ0zWIVba-2BOZLlU9b071Ujf6VsUAcVLQnAEi0h_oMiIEimv8nE3CaH9ybg/exec";
+    // ##### KONIEC KONFIGURACJI #####
 
     let daneOferty = {};
     let aktywneUstawieniaAdmina = {};
@@ -648,7 +651,6 @@
         const zachowanyValue = selectElement.value;
         selectElement.innerHTML = '<option value="0" data-price="0">-- Wybierz --</option>';
         
-        // Sprawdzamy, czy BAZA_PRODUKTOW_UI i odpowiednie kategorie istnieją
         const produkty = BAZA_PRODUKTOW_UI?.[kategoria]?.[typPokrycia] || [];
 
         if (produkty.length > 0) {
@@ -680,7 +682,6 @@
     };
 
     const zapiszOferteWArkuzu = (dane, numerOferty) => {
-        // "Spłaszczenie" obiektu na potrzeby Google Apps Script
         const daneDoZapisu = {
             action: 'saveOffer',
             numerOferty: numerOferty,
@@ -704,7 +705,7 @@
                 'Content-Type': 'application/json'
             }
         })
-        .then(res => res.text()) // Używamy .text(), aby zobaczyć dokładną odpowiedź
+        .then(res => res.text())
         .then(data => {
             console.log("Odpowiedź z Arkusza:", data);
             if (!data.toLowerCase().includes("success")) {
@@ -754,7 +755,6 @@
     const generujPDF = (typ) => {
         aktualizujPodsumowanieWizualne(); 
         
-        // Walidacja - sprawdzenie czy dane klienta są wpisane
         if (!daneOferty.klient.imie || !daneOferty.handlowiec.imie) {
             alert("Proszę wypełnić dane Klienta i Handlowca przed wygenerowaniem oferty.");
             przejdzDoEtapu(4);
@@ -865,6 +865,7 @@
     
     document.getElementById('typ-pokrycia').addEventListener('change', () => {
         aktywnaListaId = null;
+        document.querySelectorAll('.lista-produktow').forEach(lista => lista.selectedIndex = 0);
         odswiezWszystkieListy();
         aktualizujPodsumowanieWizualne();
     });
