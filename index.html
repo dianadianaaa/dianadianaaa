@@ -5,10 +5,9 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://script.google.com https://script.googleusercontent.com;">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kalkulator Green Now</title>
-    
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://unpkg.com/jspdf-autotable"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-customfonts/1.0.4/vfs_fonts.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
@@ -116,21 +115,18 @@
     </div>
 
 <script>
-    const SCRIPT_URL_DO_DANYCH = "https://script.google.com/macros/s/AKfycbxjTv136X5luVMeIout3u5Op9xJI9APgsCsEptOHJ9u7KUCiPGfBTWjvDxSiBZVfjY7/exec";
-
-    let daneOferty = {};
-    // ... reszta kodu";
+    const SCRIPT_URL_DO_DANYCH = "https://script.google.com/macros/s/AKfycbxvrt9GoDfinZt5MowppCUc70Ex-UzIulu23jjoIWBwJEXVuHfXa0Z3F4cdoDqXKHv3Kw/exec";
 
     let daneOferty = {};
     let aktywneUstawieniaAdmina = {};
     let aktywnaListaId = null;
     let numerZapisanejOferty = null;
-    
+
     const pobierzUstawieniaZArkusza = () => {
-        fetch(https://script.google.com/macros/s/AKfycbxjTv136X5luVMeIout3u5Op9xJI9APgsCsEptOHJ9u7KUCiPGfBTWjvDxSiBZVfjY7/exec)
+        fetch(SCRIPT_URL_DO_DANYCH)
             .then(response => {
                 if (!response.ok) {
-                    throw new Error('Failed to fetch');
+                    throw new Error(`Błąd sieci: ${response.statusText}`);
                 }
                 return response.json();
             })
@@ -152,14 +148,15 @@
                 alert(`Nie udało się załadować konfiguracji z Arkusza Google. Sprawdź, czy skrypt jest poprawnie wdrożony i ma odpowiednie uprawnienia dostępu ('Każdy'). Błąd: ${error.message}`);
             });
     };
-    
+
     document.addEventListener('DOMContentLoaded', () => {
         pobierzUstawieniaZArkusza();
+        odswiezWszystkieListy();
     });
 
     const POPRAWNE_HASLO = "ZielonaEnergia2025";
     const HASLO_WLASCICIELA = "admin";
-    
+
     document.getElementById('przycisk-zaloguj').addEventListener('click', () => {
         if (document.getElementById('haslo-dostepu').value === POPRAWNE_HASLO) {
             document.getElementById('prosty-login').classList.add('ukryty');
@@ -168,9 +165,9 @@
             document.getElementById('login-error-prosty').textContent = 'Nieprawidłowe hasło!';
         }
     });
-    
+
     document.getElementById('haslo-dostepu').addEventListener('keyup', (event) => { if (event.key === 'Enter') document.getElementById('przycisk-zaloguj').click(); });
-    
+
     document.getElementById('przycisk-wlasciciela').addEventListener('click', () => {
         const haslo = prompt("Podaj hasło właściciela:");
         if (haslo === HASLO_WLASCICIELA) {
@@ -188,6 +185,7 @@
         document.getElementById(`etap${numerEtapu}`)?.classList.remove('ukryty');
     };
 
+    // --- POCZĄTEK BAZY PRODUKTÓW ---
     const BAZA_PRODUKTOW_UI = {
         "zestawy_sieciowe":{
             "TRAPEZ":[
@@ -244,7 +242,9 @@
                 {"name":"BLACHODACHÓWKA ZESTAW 14,7 KWP LONGI 525 + DEYE SUN-12K-G08","price":33134.00},
                 {"name":"BLACHODACHÓWKA ZESTAW 15,225 KWP LONGI 525 + DEYE SUN-10K-G09","price":33827.00}
             ],
-            "DACHÓWKA":[],
+            "DACHÓWKA":[
+                // Ceny dla DACHÓWKA są takie same jak dla BLACHODACHÓWKA - można je skopiować lub dostosować
+            ],
             "EKIERKI":[
                 {"name":"EKIERKI INWAZYJNE ZESTAW 2,625 KWP LONGI 525 + Deye SUN-3K-G 1F","price":15717.50},
                 {"name":"EKIERKI INWAZYJNE ZESTAW 3,15 KWP LONGI 525 + Deye SUN-3K-G 1F","price":16493.00},
@@ -565,12 +565,14 @@
             ]
         }
     };
-    
+    // --- KONIEC BAZY PRODUKTÓW ---
+
+
     const aktualizujPodsumowanieWizualne = () => {
         numerZapisanejOferty = null;
         const getPrice = (element) => (element && element.selectedIndex > 0) ? parseFloat(element.options[element.selectedIndex].getAttribute('data-price')) : 0;
         const getText = (element) => (element && element.selectedIndex > 0) ? element.options[element.selectedIndex].text : "";
-        
+
         let wybranyZestaw = { text: "", price: 0 };
         if (aktywnaListaId) {
             const aktywnaLista = document.getElementById(aktywnaListaId);
@@ -619,6 +621,7 @@
         document.getElementById('kwota-vat').textContent = kwotaVat.toFixed(2);
         document.getElementById('cena-koncowa').textContent = cenaKoncowa.toFixed(2);
         document.getElementById('dlugosc-przekopu-kontener').classList.toggle('ukryty', daneOferty.przekop.pricePerMeter <= 0);
+        
         const listaElementow = document.getElementById('lista-wybranych-elementow');
         listaElementow.innerHTML = '';
         const dodajDoListy = (etykieta, wartosc) => {
@@ -629,6 +632,7 @@
                 listaElementow.appendChild(li);
             }
         };
+
         dodajDoListy('Zestaw główny', daneOferty.zestawPV.text);
         dodajDoListy('Dod. magazyn NN', daneOferty.magazynNisko.text);
         dodajDoListy('Dod. magazyn WN', daneOferty.magazynWysoko.text);
@@ -639,11 +643,14 @@
         dodajDoListy('Dod. Falownik+Magazyn', daneOferty.falownikMagazyn.text);
         if(daneOferty.inneDodatki.cena > 0) dodajDoListy(daneOferty.inneDodatki.nazwa || 'Inne dodatki', daneOferty.inneDodatki.cena);
     };
-    
+
     const wypelnijListe = (selectElement, kategoria, typPokrycia) => {
         const zachowanyValue = selectElement.value;
         selectElement.innerHTML = '<option value="0" data-price="0">-- Wybierz --</option>';
-        const produkty = BAZA_PRODUKTOW_UI[kategoria]?.[typPokrycia] || [];
+        
+        // Sprawdzamy, czy BAZA_PRODUKTOW_UI i odpowiednie kategorie istnieją
+        const produkty = BAZA_PRODUKTOW_UI?.[kategoria]?.[typPokrycia] || [];
+
         if (produkty.length > 0) {
             selectElement.disabled = false;
             produkty.forEach(produkt => {
@@ -657,7 +664,7 @@
         }
         selectElement.value = zachowanyValue;
     };
-
+    
     const odswiezWszystkieListy = () => {
         const wybranyTyp = document.getElementById('typ-pokrycia').value;
         if(wybranyTyp) {
@@ -671,37 +678,43 @@
             });
         }
     };
-    
+
     const zapiszOferteWArkuzu = (dane, numerOferty) => {
+        // "Spłaszczenie" obiektu na potrzeby Google Apps Script
         const daneDoZapisu = {
             action: 'saveOffer',
-            ...dane,
-            ...dane.obliczenia,
-            numerOferty: numerOferty
+            numerOferty: numerOferty,
+            dataWygenerowania: new Date().toISOString(),
+            klient: dane.klient.imie,
+            handlowiec: dane.handlowiec.imie,
+            kwotaNetto: dane.obliczenia.sumaNettoFinal,
+            kwotaBrutto: dane.obliczenia.cenaKoncowa,
+            produkty: document.getElementById('lista-wybranych-elementow').innerText.replace(/\n/g, '; '),
+            marzaHandlowca: dane.obliczenia.marzaDlaPH,
+            nadprowizjaDyrektora: dane.nadprowizje.dyrektor,
+            nadprowizjaKierownika: dane.nadprowizje.kierownik,
+            nadprowizjaFirmy: dane.nadprowizje.firma,
         };
-        delete daneDoZapisu.obliczenia;
-
+        
         fetch(SCRIPT_URL_DO_DANYCH, {
             method: 'POST',
             mode: 'cors',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify(daneDoZapisu)
-        })
-        .then(response => {
-            if (!response.ok) { throw new Error('Failed to fetch'); }
-            return response.text();
-        })
-        .then(data => {
-            console.log("Odpowiedź z Arkusza:", data);
-            if (!data.includes("OK")) {
-                alert("Wystąpił błąd po stronie serwera Google. Odpowiedź: " + data);
-            } else {
-                console.log("Oferta zapisana pomyślnie.");
+            body: JSON.stringify(daneDoZapisu),
+            headers: {
+                'Content-Type': 'application/json'
             }
         })
-        .catch(error => {
-            console.error("Błąd wysyłania danych do Arkusza Google:", error);
-            alert(`Wystąpił krytyczny błąd podczas zapisu do Arkusza Google. Sprawdź konsolę (F12) oraz upewnij się, że skrypt po stronie Google jest poprawnie wdrożony i ma odpowiednie uprawnienia dostępu ('Każdy'). Treść błędu: ${error.message}`);
+        .then(res => res.text()) // Używamy .text(), aby zobaczyć dokładną odpowiedź
+        .then(data => {
+            console.log("Odpowiedź z Arkusza:", data);
+            if (!data.toLowerCase().includes("success")) {
+                 alert("Wystąpił błąd podczas zapisu do Arkusza: " + data);
+            } else {
+                 console.log("Oferta zapisana pomyślnie w Arkuszu.");
+            }
+        }).catch(error => {
+            console.error("Krytyczny błąd wysyłania danych do Arkusza Google:", error);
+            alert(`Nie udało się zapisać oferty w Arkuszu Google. Sprawdź konsolę (F12) w celu uzyskania szczegółów. Błąd: ${error.message}`);
         });
     };
 
@@ -720,15 +733,14 @@
         fetch(SCRIPT_URL_DO_DANYCH, {
             method: 'POST',
             mode: 'cors',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify(dataDoZapisu)
+            body: JSON.stringify(dataDoZapisu),
+            headers: {
+                'Content-Type': 'application/json'
+            }
         })
-        .then(response => {
-            if (!response.ok) { throw new Error('Failed to fetch'); }
-            return response.text();
-        })
+        .then(res => res.text())
         .then(data => {
-            if(data.includes("OK")) {
+            if(data.toLowerCase().includes("success")) {
                 alert("Ustawienia zostały zapisane na stałe!");
             } else {
                 alert("Wystąpił błąd podczas zapisu ustawień: " + data);
@@ -741,14 +753,24 @@
 
     const generujPDF = (typ) => {
         aktualizujPodsumowanieWizualne(); 
+        
+        // Walidacja - sprawdzenie czy dane klienta są wpisane
+        if (!daneOferty.klient.imie || !daneOferty.handlowiec.imie) {
+            alert("Proszę wypełnić dane Klienta i Handlowca przed wygenerowaniem oferty.");
+            przejdzDoEtapu(4);
+            return;
+        }
+        
         if (numerZapisanejOferty === null) {
             const dzisiaj = new Date();
             numerZapisanejOferty = `GN/${dzisiaj.getDate().toString().padStart(2, '0')}${(dzisiaj.getMonth() + 1).toString().padStart(2, '0')}${dzisiaj.getFullYear()}/${String(Date.now()).slice(-4)}`;
             zapiszOferteWArkuzu(daneOferty, numerZapisanejOferty);
         }
+
         const numerOfertyDoPDF = numerZapisanejOferty;
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
+        
         doc.setFont('helvetica', 'normal');
         doc.setFillColor(244, 247, 246);
         doc.rect(0, 0, 210, 45, 'F');
@@ -756,6 +778,7 @@
         doc.setFontSize(20);
         doc.setTextColor(0, 91, 65);
         doc.text(typ === 'klient' ? "OFERTA HANDLOWA" : "PODSUMOWANIE DLA BIURA", 105, 20, { align: 'center' });
+        
         const dzisiaj = new Date();
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(10);
@@ -774,6 +797,7 @@
         doc.setTextColor(0, 91, 65);
         doc.text("Nabywca:", 20, y);
         doc.text("Sprzedawca:", 110, y);
+        
         doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(51, 51, 51);
@@ -782,6 +806,7 @@
         doc.text(daneOferty.klient.kod, 20, y + 17);
         doc.text(`Tel: ${daneOferty.klient.telefon}`, 20, y + 22);
         doc.text(`Email: ${daneOferty.klient.email}`, 20, y + 27);
+        
         doc.setFont('helvetica', 'bold');
         doc.text("GREEN NOW SP. Z O.O.", 110, y + 7);
         doc.setFont('helvetica', 'normal');
@@ -789,6 +814,7 @@
         doc.text(`Tel: ${daneOferty.handlowiec.telefon}`, 110, y + 17);
         doc.text(`Email: ${daneOferty.handlowiec.email}`, 110, y + 22);
         y += 40;
+        
         const specyfikacjaBody = [];
         const listaElementow = document.getElementById('lista-wybranych-elementow').children;
         for (let i = 0; i < listaElementow.length; i++) {
@@ -798,37 +824,45 @@
             const opis = textContent.substring(separatorIndex + 1).trim();
             specyfikacjaBody.push([specyfikacjaBody.length + 1, etykieta, opis]);
         }
+        
         doc.autoTable({
             startY: y, head: [['Lp.', 'Element', 'Opis']], body: specyfikacjaBody, theme: 'striped',
             headStyles: { fillColor: [0, 91, 65], font: 'helvetica', fontStyle: 'bold' },
             styles: { font: 'helvetica', cellPadding: 2.5 }, columnStyles: { 0: { cellWidth: 10 } }
         });
+        
         y = doc.lastAutoTable.finalY + 10;
-        const { sumaNettoFinal, kwotaVat, cenaKoncowa, marzaDlaPH } = daneOferty.obliczenia;
+        const { sumaNettoFinal, kwotaVat, cenaKoncowa, marzaDlaPH, kosztBazowy } = daneOferty.obliczenia;
         
         const cenyBodyKlient = [
-            [`Wartosc Netto:`, `${sumaNettoFinal.toFixed(2)} PLN`],
+            [`Wartość Netto:`, `${sumaNettoFinal.toFixed(2)} PLN`],
             [`Podatek VAT (${(daneOferty.stawkaVat * 100).toFixed(0)}%):`, `${kwotaVat.toFixed(2)} PLN`],
-            [{ content: 'Wartosc Brutto:', styles: { font: 'helvetica', fontStyle: 'bold', fontSize: 11, fillColor: [224, 255, 230] } }, { content: `${cenaKoncowa.toFixed(2)} PLN`, styles: { font: 'helvetica', fontStyle: 'bold', fontSize: 11, fillColor: [224, 255, 230] } }]
+            [{ content: 'Wartość Brutto:', styles: { fontStyle: 'bold', fontSize: 11, fillColor: [224, 255, 230] } }, { content: `${cenaKoncowa.toFixed(2)} PLN`, styles: { fontStyle: 'bold', fontSize: 11, fillColor: [224, 255, 230] } }]
         ];
+        
         const cenyBodyBiuro = [
+            ['Koszt Bazowy (dla firmy):', `${kosztBazowy.toFixed(2)} PLN`],
+            ['Marża Handlowca (widoczna):', `${marzaDlaPH.toFixed(2)} PLN`],
             [{content: 'SUMA Netto (dla klienta):', styles: {fontStyle: 'bold'}}, {content: `${sumaNettoFinal.toFixed(2)} PLN`, styles: {fontStyle: 'bold'}}],
-            ['Marża dla Handlowca (widoczna):', `${marzaDlaPH.toFixed(2)} PLN`],
             ['Podatek VAT:', `${kwotaVat.toFixed(2)} PLN`],
-            [{ content: 'SUMA Brutto (dla klienta):', styles: { font: 'helvetica', fontStyle: 'bold', fillColor: '#f0f0f0' } }, { content: `${cenaKoncowa.toFixed(2)} PLN`, styles: { font: 'helvetica', fontStyle: 'bold', fillColor: '#f0f0f0' } }]
+            [{ content: 'SUMA Brutto (dla klienta):', styles: { fontStyle: 'bold', fillColor: '#f0f0f0' } }, { content: `${cenaKoncowa.toFixed(2)} PLN`, styles: { fontStyle: 'bold', fillColor: '#f0f0f0' } }]
         ];
+        
         doc.autoTable({ startY: y, body: typ === 'klient' ? cenyBodyKlient : cenyBodyBiuro, theme: 'grid', styles: { font: 'helvetica' }, columnStyles: { 0: { fontStyle: 'bold' }, 1: { halign: 'right' } } });
+        
         y = doc.lastAutoTable.finalY;
         const nazwaPliku = `${typ === 'klient' ? 'Oferta' : 'Podsumowanie'}_${daneOferty.klient.imie.replace(/[^a-z0-9]/gi, '_')}.pdf`;
         doc.save(nazwaPliku);
     };
-    
+
+    // --- EVENT LISTENERS ---
     document.querySelectorAll('input, select').forEach(element => {
         element.addEventListener('input', aktualizujPodsumowanieWizualne);
         element.addEventListener('change', aktualizujPodsumowanieWizualne);
     });
-    
+
     document.getElementById('przycisk-zapisz-ustawienia').addEventListener('click', zapiszUstawienia);
+    
     document.getElementById('typ-pokrycia').addEventListener('change', () => {
         aktywnaListaId = null;
         odswiezWszystkieListy();
@@ -848,11 +882,10 @@
             aktualizujPodsumowanieWizualne();
         });
     });
-    
+
     document.getElementById('przycisk-pdf-klient').addEventListener('click', () => generujPDF('klient'));
     document.getElementById('przycisk-pdf-biuro').addEventListener('click', () => generujPDF('biuro'));
-    
-    odswiezWszystkieListy();
+
 </script>
 </body>
 </html>
