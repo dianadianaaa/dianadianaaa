@@ -354,9 +354,7 @@
                 {"name":"BLACHODACHÓWKA ZESTAW 14,7 KWP LONGI 525 + DEYE SUN-12K-G08 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":48064.00},
                 {"name":"BLACHODACHÓWKA ZESTAW 15,225 KWP LONGI 525 + DEYE SUN-15K-G09 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":48757.00}
             ],
-            "DACHÓWKA":[],
-            "EKIERKI":[],
-            "GRUNT":[]
+            "DACHÓWKA":[], "EKIERKI":[], "GRUNT":[]
         },
         "zestawy_wysokonapieciowe":{
             "TRAPEZ":[
@@ -411,29 +409,261 @@
                 {"name":"BLACHODACHÓWKA ZESTAW O MOCY 14,7 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":49864.0},
                 {"name":"BLACHODACHÓWKA ZESTAW O MOCY 15,225 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":50607.0}
             ],
-            "DACHÓWKA":[],
-            "EKIERKI":[],
-            "GRUNT":[]
+            "DACHÓWKA":[], "EKIERKI":[], "GRUNT":[]
         }
     };
     // --- KONIEC PEŁNEJ BAZY PRODUKTÓW ---
 
-    const aktualizujPodsumowanieWizualne = () => { /* ... bez zmian ... */ };
-    const wypelnijListe = (selectElement, kategoria, typPokrycia) => { /* ... bez zmian ... */ };
-    const odswiezWszystkieListy = () => { /* ... bez zmian ... */ };
-    const zapiszUstawienia = () => { /* ... bez zmian ... */ };
-    const generujPDF = (typ) => { /* ... bez zmian ... */ };
+    const aktualizujPodsumowanieWizualne = () => {
+        numerZapisanejOferty = null;
+        const getPrice = (element) => (element && element.selectedIndex > 0) ? parseFloat(element.options[element.selectedIndex].getAttribute('data-price')) : 0;
+        const getText = (element) => (element && element.selectedIndex > 0) ? element.options[element.selectedIndex].text : "";
+        let wybranyZestaw = { text: "", price: 0 };
+        if (aktywnaListaId) {
+            const aktywnaLista = document.getElementById(aktywnaListaId);
+            wybranyZestaw.text = getText(aktywnaLista);
+            wybranyZestaw.price = getPrice(aktywnaLista);
+        }
+        const marzaWidocznosc = parseFloat(document.getElementById('marza-widocznosc').value) || 100;
+        const nadprowizjaDyrektora = parseFloat(document.getElementById('nadprowizja-dyrektora').value) || 0;
+        const nadprowizjaKierownika = parseFloat(document.getElementById('nadprowizja-kierownika').value) || 0;
+        const nadprowizjaFirmy = parseFloat(document.getElementById('nadprowizja-firmy').value) || 0;
+        daneOferty = {
+            typPokrycia: { text: getText(document.getElementById('typ-pokrycia')) },
+            typInstalacji: { text: getText(document.getElementById('typ-instalacji')) },
+            zestawPV: wybranyZestaw,
+            magazynNisko: { text: getText(document.getElementById('magazyn-niskonapieciowy')), price: getPrice(document.getElementById('magazyn-niskonapieciowy')) },
+            magazynWysoko: { text: getText(document.getElementById('magazyn-wysokonapieciowy')), price: getPrice(document.getElementById('magazyn-wysokonapieciowy')) },
+            dodatkiMagazyn: { text: getText(document.getElementById('dodatki-magazyn')), price: getPrice(document.getElementById('dodatki-magazyn')) },
+            dodatkiModuly: { text: getText(document.getElementById('dodatki-moduly')), price: getPrice(document.getElementById('dodatki-moduly')) },
+            przekop: { text: document.getElementById('przekop').options[document.getElementById('przekop').selectedIndex].text, value: document.getElementById('przekop').value, pricePerMeter: parseFloat(document.getElementById('przekop').options[document.getElementById('przekop').selectedIndex].getAttribute('data-price-per-meter')) || 0, length: parseFloat(document.getElementById('dlugosc-przekopu').value) || 0 },
+            klimatyzacja: { text: getText(document.getElementById('klimatyzacja')), price: getPrice(document.getElementById('klimatyzacja')) },
+            falownikMagazyn: { text: getText(document.getElementById('falownik-magazyn')), price: getPrice(document.getElementById('falownik-magazyn')) },
+            inneDodatki: { nazwa: document.getElementById('inne-dodatki-nazwa').value, cena: parseFloat(document.getElementById('inne-dodatki-cena').value) || 0 },
+            stawkaVat: parseFloat(document.getElementById('stawka-vat').value) || 0,
+            marzaProcent: parseFloat(document.getElementById('marza-procent').value) || 0,
+            nazwaGrupy: document.getElementById('nazwa-grupy').value,
+            klient: { imie: document.getElementById('klient-imie').value, adres: document.getElementById('klient-adres').value, kod: document.getElementById('klient-kod').value, telefon: document.getElementById('klient-telefon').value, email: document.getElementById('klient-email').value },
+            handlowiec: { imie: document.getElementById('ph-imie').value, telefon: document.getElementById('ph-telefon').value, email: document.getElementById('ph-email').value, teren: document.getElementById('ph-teren').value },
+            nadprowizje: { dyrektor: nadprowizjaDyrektora, kierownik: nadprowizjaKierownika, firma: nadprowizjaFirmy },
+            ustawieniaMarzy: { widocznosc: marzaWidocznosc }
+        };
+        let kosztPodstawowy = daneOferty.zestawPV.price + daneOferty.magazynNisko.price + daneOferty.magazynWysoko.price + daneOferty.dodatkiMagazyn.price + daneOferty.dodatkiModuly.price + (daneOferty.przekop.pricePerMeter * daneOferty.przekop.length) + daneOferty.klimatyzacja.price + daneOferty.falownikMagazyn.price + daneOferty.inneDodatki.cena;
+        const sumaNadprowizji = daneOferty.nadprowizje.dyrektor + daneOferty.nadprowizje.kierownik + daneOferty.nadprowizje.firma;
+        const kosztBazowy = (kosztPodstawowy > 0) ? (kosztPodstawowy + sumaNadprowizji) : 0;
+        const wartoscMarzyCalkowita = kosztBazowy * (daneOferty.marzaProcent / 100);
+        const marzaDlaPH = wartoscMarzyCalkowita * (daneOferty.ustawieniaMarzy.widocznosc / 100);
+        const sumaNettoFinal = kosztBazowy + wartoscMarzyCalkowita;
+        const kwotaVat = sumaNettoFinal * daneOferty.stawkaVat;
+        const cenaKoncowa = sumaNettoFinal + kwotaVat;
+        daneOferty.obliczenia = { kosztBazowy, wartoscMarzyCalkowita, marzaDlaPH, sumaNettoFinal, kwotaVat, cenaKoncowa };
+        document.getElementById('koszt-bazowy').textContent = kosztBazowy.toFixed(2);
+        document.getElementById('wartosc-marzy').textContent = marzaDlaPH.toFixed(2);
+        document.getElementById('suma-netto-final').textContent = sumaNettoFinal.toFixed(2);
+        document.getElementById('kwota-vat').textContent = kwotaVat.toFixed(2);
+        document.getElementById('cena-koncowa').textContent = cenaKoncowa.toFixed(2);
+        document.getElementById('dlugosc-przekopu-kontener').classList.toggle('ukryty', daneOferty.przekop.pricePerMeter <= 0);
+        const listaElementow = document.getElementById('lista-wybranych-elementow');
+        listaElementow.innerHTML = '';
+        const dodajDoListy = (etykieta, wartosc) => {
+            if (wartosc && wartosc !== 'Brak' && wartosc !== '-- Wybierz --' && wartosc !== '--' && wartosc !== 0 && wartosc !== '-- Brak --') {
+                const li = document.createElement('li');
+                if (typeof wartosc === 'number') li.textContent = `${etykieta}: ${wartosc.toFixed(2)} PLN`;
+                else li.textContent = `${etykieta}: ${wartosc}`;
+                listaElementow.appendChild(li);
+            }
+        };
+        dodajDoListy('Zestaw główny', daneOferty.zestawPV.text);
+        dodajDoListy('Dod. magazyn NN', daneOferty.magazynNisko.text);
+        dodajDoListy('Dod. magazyn WN', daneOferty.magazynWysoko.text);
+        dodajDoListy('Bufor ciepła', daneOferty.dodatkiMagazyn.text);
+        dodajDoListy('Dodatkowe moduły', daneOferty.dodatkiModuly.text);
+        if (daneOferty.przekop.value !== 'brak') { dodajDoListy('Prace ziemne', daneOferty.przekop.text); }
+        dodajDoListy('Klimatyzacja', daneOferty.klimatyzacja.text);
+        dodajDoListy('Dod. Falownik+Magazyn', daneOferty.falownikMagazyn.text);
+        if(daneOferty.inneDodatki.cena > 0) dodajDoListy(daneOferty.inneDodatki.nazwa || 'Inne dodatki', daneOferty.inneDodatki.cena);
+    };
 
-    // ... PONIŻEJ RESZTA FUNKCJI I EVENT LISTENERY, KTÓRE SĄ JUŻ POPRAWNE ...
-    document.querySelectorAll('input, select').forEach(element => {
-        element.addEventListener('input', aktualizujPodsumowanieWizualne);
-        element.addEventListener('change', aktualizujPodsumowanieWizualne);
+    const wypelnijListe = (selectElement, kategoria, typPokrycia) => {
+        const zachowanyValue = selectElement.value;
+        selectElement.innerHTML = '<option value="0" data-price="0">-- Wybierz --</option>';
+        const produkty = BAZA_PRODUKTOW_UI?.[kategoria]?.[typPokrycia] || [];
+        if (produkty.length > 0) {
+            selectElement.disabled = false;
+            produkty.forEach(produkt => {
+                const opcja = new Option(produkt.name, produkt.name);
+                opcja.dataset.price = produkt.price;
+                selectElement.add(opcja);
+            });
+        } else {
+            selectElement.disabled = true;
+            selectElement.innerHTML = '<option value="0" data-price="0">-- Brak produktów --</option>';
+        }
+        selectElement.value = zachowanyValue;
+    };
+    
+    const odswiezWszystkieListy = () => {
+        const wybranyTyp = document.getElementById('typ-pokrycia').value;
+        if(wybranyTyp) {
+            wypelnijListe(document.getElementById('zestaw-sieciowy'), 'zestawy_sieciowe', wybranyTyp);
+            wypelnijListe(document.getElementById('zestaw-niskonapieciowy'), 'zestawy_niskonapieciowe', wybranyTyp);
+            wypelnijListe(document.getElementById('zestaw-wysokonapieciowy'), 'zestawy_wysokonapieciowe', wybranyTyp);
+        } else {
+            document.querySelectorAll('.lista-produktow').forEach(lista => {
+                lista.disabled = true;
+                lista.innerHTML = '<option value="0" data-price="0">--</option>';
+            });
+        }
+    };
+
+    const zapiszUstawienia = () => {
+        const dataDoZapisu = {
+            action: 'saveSettings',
+            settings: {
+                'nadprowizja-dyrektora': parseFloat(document.getElementById('nadprowizja-dyrektora').value) || 0,
+                'nadprowizja-kierownika': parseFloat(document.getElementById('nadprowizja-kierownika').value) || 0,
+                'nadprowizja-firmy': parseFloat(document.getElementById('nadprowizja-firmy').value) || 0,
+                'marza-widocznosc': parseFloat(document.getElementById('marza-widocznosc').value) || 100,
+                'nazwa-grupy': document.getElementById('nazwa-grupy').value || ''
+            }
+        };
+        fetch(SCRIPT_URL_DO_DANYCH, {
+            method: 'POST',
+            mode: 'cors',
+            redirect: "follow",
+            body: JSON.stringify(dataDoZapisu),
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(res => res.text())
+        .then(data => {
+            if(data.toLowerCase().includes("success")) {
+                alert("Ustawienia zostały zapisane na stałe!");
+            } else {
+                alert("Wystąpił błąd podczas zapisu ustawień: " + data);
+            }
+        })
+        .catch(error => {
+            alert(`Wystąpił krytyczny błąd podczas zapisu ustawień. Treść błędu: ${error.message}`);
+        });
+    };
+
+    const generujPDF = (typ) => {
+        aktualizujPodsumowanieWizualne(); 
+        if (!daneOferty.klient.imie || !daneOferty.handlowiec.imie) {
+            alert("Proszę wypełnić dane Klienta i Handlowca przed wygenerowaniem oferty.");
+            przejdzDoEtapu(4);
+            return;
+        }
+        if (numerZapisanejOferty === null) {
+            const dzisiaj = new Date();
+            numerZapisanejOferty = `GN/${dzisiaj.getDate().toString().padStart(2, '0')}${(dzisiaj.getMonth() + 1).toString().padStart(2, '0')}${dzisiaj.getFullYear()}/${String(Date.now()).slice(-4)}`;
+            zapiszOferteWArkuzu(daneOferty, numerZapisanejOferty);
+        }
+        const numerOfertyDoPDF = numerZapisanejOferty;
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.setFont('helvetica', 'normal');
+        doc.setFillColor(244, 247, 246);
+        doc.rect(0, 0, 210, 45, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(20);
+        doc.setTextColor(0, 91, 65);
+        doc.text(typ === 'klient' ? "OFERTA HANDLOWA" : "PODSUMOWANIE DLA BIURA", 105, 20, { align: 'center' });
+        const dzisiaj = new Date();
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(51, 51, 51);
+        doc.text(`Nr oferty: ${numerOfertyDoPDF}`, 195, 30, { align: 'right' });
+        doc.text(`Data: ${dzisiaj.toLocaleDateString('pl-PL')}`, 195, 35, { align: 'right' });
+        if (daneOferty.nazwaGrupy) {
+            doc.setFont('helvetica', 'bold');
+            doc.text(`Grupa: ${daneOferty.nazwaGrupy}`, 195, 40, { align: 'right' });
+        }
+        let y = 55;
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(0, 91, 65);
+        doc.text("Nabywca:", 20, y);
+        doc.text("Sprzedawca:", 110, y);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(51, 51, 51);
+        doc.text(daneOferty.klient.imie, 20, y + 7);
+        doc.text(daneOferty.klient.adres, 20, y + 12);
+        doc.text(daneOferty.klient.kod, 20, y + 17);
+        doc.text(`Tel: ${daneOferty.klient.telefon}`, 20, y + 22);
+        doc.text(`Email: ${daneOferty.klient.email}`, 20, y + 27);
+        doc.setFont('helvetica', 'bold');
+        doc.text("GREEN NOW SP. Z O.O.", 110, y + 7);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Przedstawiciel: ${daneOferty.handlowiec.imie}`, 110, y + 12);
+        doc.text(`Tel: ${daneOferty.handlowiec.telefon}`, 110, y + 17);
+        doc.text(`Email: ${daneOferty.handlowiec.email}`, 110, y + 22);
+        y += 40;
+        const specyfikacjaBody = [];
+        const listaElementow = document.getElementById('lista-wybranych-elementow').children;
+        for (let i = 0; i < listaElementow.length; i++) {
+            const textContent = listaElementow[i].textContent;
+            const separatorIndex = textContent.indexOf(':');
+            const etykieta = textContent.substring(0, separatorIndex);
+            const opis = textContent.substring(separatorIndex + 1).trim();
+            specyfikacjaBody.push([specyfikacjaBody.length + 1, etykieta, opis]);
+        }
+        doc.autoTable({
+            startY: y, head: [['Lp.', 'Element', 'Opis']], body: specyfikacjaBody, theme: 'striped',
+            headStyles: { fillColor: [0, 91, 65], font: 'helvetica', fontStyle: 'bold' },
+            styles: { font: 'helvetica', cellPadding: 2.5 }, columnStyles: { 0: { cellWidth: 10 } }
+        });
+        y = doc.lastAutoTable.finalY + 10;
+        const { sumaNettoFinal, kwotaVat, cenaKoncowa, marzaDlaPH, kosztBazowy } = daneOferty.obliczenia;
+        const cenyBodyKlient = [
+            [`Wartość Netto:`, `${sumaNettoFinal.toFixed(2)} PLN`],
+            [`Podatek VAT (${(daneOferty.stawkaVat * 100).toFixed(0)}%):`, `${kwotaVat.toFixed(2)} PLN`],
+            [{ content: 'Wartość Brutto:', styles: { fontStyle: 'bold', fontSize: 11, fillColor: [224, 255, 230] } }, { content: `${cenaKoncowa.toFixed(2)} PLN`, styles: { fontStyle: 'bold', fontSize: 11, fillColor: [224, 255, 230] } }]
+        ];
+        const cenyBodyBiuro = [
+            ['Koszt Bazowy (dla firmy):', `${kosztBazowy.toFixed(2)} PLN`],
+            ['Marża Handlowca (widoczna):', `${marzaDlaPH.toFixed(2)} PLN`],
+            [{content: 'SUMA Netto (dla klienta):', styles: {fontStyle: 'bold'}}, {content: `${sumaNettoFinal.toFixed(2)} PLN`, styles: {fontStyle: 'bold'}}],
+            ['Podatek VAT:', `${kwotaVat.toFixed(2)} PLN`],
+            [{ content: 'SUMA Brutto (dla klienta):', styles: { fontStyle: 'bold', fillColor: '#f0f0f0' } }, { content: `${cenaKoncowa.toFixed(2)} PLN`, styles: { fontStyle: 'bold', fillColor: '#f0f0f0' } }]
+        ];
+        doc.autoTable({ startY: y, body: typ === 'klient' ? cenyBodyKlient : cenyBodyBiuro, theme: 'grid', styles: { font: 'helvetica' }, columnStyles: { 0: { fontStyle: 'bold' }, 1: { halign: 'right' } } });
+        y = doc.lastAutoTable.finalY;
+        const nazwaPliku = `${typ === 'klient' ? 'Oferta' : 'Podsumowanie'}_${daneOferty.klient.imie.replace(/[^a-z0-9]/gi, '_')}.pdf`;
+        doc.save(nazwaPliku);
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        pobierzUstawieniaZArkusza();
+        odswiezWszystkieListy();
     });
+    
+    document.getElementById('przycisk-zaloguj').addEventListener('click', () => {
+        if (document.getElementById('haslo-dostepu').value === POPRAWNE_HASLO) {
+            document.getElementById('prosty-login').classList.add('ukryty');
+            document.getElementById('glowny-kalkulator').classList.remove('ukryty');
+        } else {
+            document.getElementById('login-error-prosty').textContent = 'Nieprawidłowe hasło!';
+        }
+    });
+
+    document.querySelectorAll('input, select').forEach(element => {
+        if (element.id !== 'haslo-dostepu') { // Nie dodajemy do hasła, żeby nie kolidowało z logowaniem
+            element.addEventListener('input', aktualizujPodsumowanieWizualne);
+            element.addEventListener('change', aktualizujPodsumowanieWizualne);
+        }
+    });
+
     document.getElementById('przycisk-zapisz-ustawienia').addEventListener('click', zapiszUstawienia);
+    
     document.getElementById('typ-pokrycia').addEventListener('change', () => {
+        aktywnaListaId = null;
+        document.querySelectorAll('.lista-produktow').forEach(lista => lista.selectedIndex = 0);
         odswiezWszystkieListy();
         aktualizujPodsumowanieWizualne();
     });
+
     document.querySelectorAll('.lista-produktow').forEach(obecnaLista => {
         obecnaLista.addEventListener('change', () => {
             if (obecnaLista.value !== '0') {
@@ -447,6 +677,7 @@
             aktualizujPodsumowanieWizualne();
         });
     });
+    
     document.getElementById('przycisk-pdf-klient').addEventListener('click', () => generujPDF('klient'));
     document.getElementById('przycisk-pdf-biuro').addEventListener('click', () => generujPDF('biuro'));
 </script>
