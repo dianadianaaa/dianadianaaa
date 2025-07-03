@@ -187,6 +187,42 @@
             alert(`Nie udało się zapisać oferty. Błąd: ${error}`);
         });
     };
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        pobierzUstawieniaZArkusza();
+        odswiezWszystkieListy();
+    });
+
+    const POPRAWNE_HASLO = "ZielonaEnergia2025";
+    const HASLO_WLASCICIELA = "admin";
+
+    document.getElementById('przycisk-zaloguj').addEventListener('click', () => {
+        if (document.getElementById('haslo-dostepu').value === POPRAWNE_HASLO) {
+            document.getElementById('prosty-login').classList.add('ukryty');
+            document.getElementById('glowny-kalkulator').classList.remove('ukryty');
+        } else {
+            document.getElementById('login-error-prosty').textContent = 'Nieprawidłowe hasło!';
+        }
+    });
+
+    document.getElementById('haslo-dostepu').addEventListener('keyup', (event) => { if (event.key === 'Enter') document.getElementById('przycisk-zaloguj').click(); });
+
+    document.getElementById('przycisk-wlasciciela').addEventListener('click', () => {
+        const haslo = prompt("Podaj hasło właściciela:");
+        if (haslo === HASLO_WLASCICIELA) {
+            const panel = document.getElementById('panel-wlasciciela');
+            panel.classList.toggle('ukryty');
+            const inputs = panel.querySelectorAll('.admin-input');
+            inputs.forEach(input => input.readOnly = panel.classList.contains('ukryty'));
+        } else if (haslo !== null && haslo !== "") {
+            alert("Nieprawidłowe hasło właściciela!");
+        }
+    });
+
+    window.przejdzDoEtapu = (numerEtapu) => {
+        document.querySelectorAll('#etapy-kontener .etap').forEach(etap => etap.classList.add('ukryty'));
+        document.getElementById(`etap${numerEtapu}`)?.classList.remove('ukryty');
+    };
 
     // --- POCZĄTEK PEŁNEJ BAZY PRODUKTÓW ---
     const BAZA_PRODUKTOW_UI = {
@@ -567,7 +603,7 @@
         }
     };
     // --- KONIEC PEŁNEJ BAZY PRODUKTÓW ---
-
+    
     const aktualizujPodsumowanieWizualne = () => {
         numerZapisanejOferty = null;
         const getPrice = (element) => (element && element.selectedIndex > 0) ? parseFloat(element.options[element.selectedIndex].getAttribute('data-price')) : 0;
@@ -639,9 +675,11 @@
     };
 
     const wypelnijListe = (selectElement, kategoria, typPokrycia) => {
+        console.log(`--- Rozpoczynam wypełnianie listy: ID=${selectElement.id}, Kategoria=${kategoria}, Typ=${typPokrycia} ---`);
         const zachowanyValue = selectElement.value;
         selectElement.innerHTML = '<option value="0" data-price="0">-- Wybierz --</option>';
         const produkty = BAZA_PRODUKTOW_UI?.[kategoria]?.[typPokrycia] || [];
+        console.log(`Znaleziono produktów: ${produkty.length}`);
         if (produkty.length > 0) {
             selectElement.disabled = false;
             produkty.forEach(produkt => {
@@ -649,11 +687,14 @@
                 opcja.dataset.price = produkt.price;
                 selectElement.add(opcja);
             });
+            console.log("Pomyślnie dodano opcje do listy.");
         } else {
             selectElement.disabled = true;
             selectElement.innerHTML = '<option value="0" data-price="0">-- Brak produktów --</option>';
+            console.log("Nie znaleziono produktów, lista pozostaje wyłączona.");
         }
         selectElement.value = zachowanyValue;
+        console.log("--- Zakończono wypełnianie listy ---");
     };
     
     const odswiezWszystkieListy = () => {
@@ -681,7 +722,6 @@
                 'nazwa-grupy': document.getElementById('nazwa-grupy').value || ''
             }
         };
-
         fetch(SCRIPT_URL_DO_DANYCH, {
             method: 'POST',
             mode: 'cors',
@@ -794,12 +834,15 @@
         element.addEventListener('change', aktualizujPodsumowanieWizualne);
     });
     document.getElementById('przycisk-zapisz-ustawienia').addEventListener('click', zapiszUstawienia);
+    
     document.getElementById('typ-pokrycia').addEventListener('change', () => {
+        console.log("!!! Zmieniono typ pokrycia na:", document.getElementById('typ-pokrycia').value);
         aktywnaListaId = null;
         document.querySelectorAll('.lista-produktow').forEach(lista => lista.selectedIndex = 0);
         odswiezWszystkieListy();
         aktualizujPodsumowanieWizualne();
     });
+
     document.querySelectorAll('.lista-produktow').forEach(obecnaLista => {
         obecnaLista.addEventListener('change', () => {
             if (obecnaLista.value !== '0') {
