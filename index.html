@@ -101,7 +101,7 @@
         'nadprowizja-dyrektora': 0,
         'nadprowizja-kierownika': 0,
         'nadprowizja-firmy': 0,
-        'marza-widocznosc': 90 // Widoczność marży w procentach (np. 90 dla 90%)
+        'marza-widocznosc': 90 
     };
     // ==================================================================
 
@@ -112,21 +112,10 @@
     let aktywnaListaId = null;
     let numerZapisanejOferty = null;
     
-    document.getElementById('przycisk-zaloguj').addEventListener('click', () => {
-        if (document.getElementById('haslo-dostepu').value === POPRAWNE_HASLO) {
-            document.getElementById('prosty-login').classList.add('ukryty');
-            document.getElementById('glowny-kalkulator').classList.remove('ukryty');
-        } else {
-            document.getElementById('login-error-prosty').textContent = 'Nieprawidłowe hasło!';
-        }
-    });
-    
-    document.getElementById('haslo-dostepu').addEventListener('keyup', (event) => { if (event.key === 'Enter') document.getElementById('przycisk-zaloguj').click(); });
-
-    window.przejdzDoEtapu = (numerEtapu) => {
+    function przejdzDoEtapu(numerEtapu) {
         document.querySelectorAll('#etapy-kontener .etap').forEach(etap => etap.classList.add('ukryty'));
         document.getElementById(`etap${numerEtapu}`)?.classList.remove('ukryty');
-    };
+    }
 
     const BAZA_PRODUKTOW_UI = { "zestawy_sieciowe":{ "TRAPEZ":[ {"name":"TRAPEZ ZESTAW 2,625 KWP LONGI 525 + Deye SUN-3K-G 1F","price":15140.00}, {"name":"TRAPEZ ZESTAW 3,15 KWP LONGI 525 + Deye SUN-3K-G 1F","price":15800.00}, {"name":"TRAPEZ ZESTAW 3,675 KWP LONGI 525 + Deye SUN-3K-G 1F","price":16360.00}, {"name":"TRAPEZ ZESTAW 4,2 KWP LONGI 525 + DEYE SUN-4K-G05","price":17840.00}, {"name":"TRAPEZ ZESTAW 4,725 KWP LONGI 525 + DEYE SUN-4K-G05","price":18600.00}, {"name":"TRAPEZ ZESTAW 5,25 KWP LONGI 525 + DEYE SUN-5K-G05","price":19350.00}, {"name":"TRAPEZ ZESTAW 5,775 KWP LONGI 525 + DEYE SUN-5K-G05","price":20090.00}, {"name":"TRAPEZ ZESTAW 6,3 KWP LONGI 525 + DEYE SUN-6K-G05","price":20820.00}, {"name":"TRAPEZ ZESTAW 6,825 KWP LONGI 525 + DEYE SUN-6K-G05","price":21540.00}, {"name":"TRAPEZ ZESTAW 7,35 KWP LONGI 525 + DEYE SUN-8K-G05","price":22250.00}, {"name":"TRAPEZ ZESTAW 7,875 KWP LONGI 525 + DEYE SUN-8K-G05","price":22950.00}, {"name":"TRAPEZ ZESTAW 8,4 KWP LONGI 525 + DEYE SUN-8K-G05","price":23640.00}, {"name":"TRAPEZ ZESTAW 8,925 KWP LONGI 525 + DEYE SUN-8K-G05","price":24320.00}, {"name":"TRAPEZ ZESTAW 9,45 KWP LONGI 525 + DEYE SUN-10K-G05","price":24990.00}, {"name":"TRAPEZ ZESTAW 9,975 KWP LONGI 525 + DEYE SUN-10K-G05", "price": 25650.00}, {"name":"TRAPEZ ZESTAW 10,5 KWP LONGI 525 + DEYE SUN-10K-G05", "price": 26200.00}, {"name":"TRAPEZ ZESTAW 11,025 KWP LONGI 525 + DEYE SUN-10K-G05", "price": 26850.00}, {"name":"TRAPEZ ZESTAW 11,55 KWP LONGI 525 + DEYE SUN-12K-G05", "price": 27500.00}, {"name":"TRAPEZ ZESTAW 12,075 KWP LONGI 525 + DEYE SUN-10K-G06", "price": 28150.00}, {"name":"TRAPEZ ZESTAW 12,6 KWP LONGI 525 + DEYE SUN-12K-G06", "price": 28830.00}, {"name":"TRAPEZ ZESTAW 13,125 KWP LONGI 525 + DEYE SUN-10K-G07", "price": 29460.00}, {"name":"TRAPEZ ZESTAW 13,65 KWP LONGI 525 + DEYE SUN-12K-G07", "price": 30080.00}, {"name":"TRAPEZ ZESTAW 14,175 KWP LONGI 525 + DEYE SUN-10K-G08", "price": 30740.00}, {"name":"TRAPEZ ZESTAW 14,7 KWP LONGI 525 + DEYE SUN-12K-G08", "price": 31370.00}, {"name":"TRAPEZ ZESTAW 15,225 KWP LONGI 525 + DEYE SUN-10K-G09", "price": 32000.00} ], "BLACHODACHÓWKA":[ {"name":"BLACHODACHÓWKA ZESTAW 2,625 KWP LONGI 525 + Deye SUN-3K-G 1F","price":15455.00}, {"name":"BLACHODACHÓWKA ZESTAW 3,15 KWP LONGI 525 + Deye SUN-3K-G 1F","price":16178.00}, {"name":"BLACHODACHÓWKA ZESTAW 3,675 KWP LONGI 525 + Deye SUN-3K-G 1F","price":16801.00}, {"name":"BLACHODACHÓWKA ZESTAW 4,2 KWP LONGI 525 + DEYE SUN-4K-G05","price":18344.00}, {"name":"BLACHODACHÓWKA ZESTAW 4,725 KWP LONGI 525 + DEYE SUN-4K-G05","price":19167.00}, {"name":"BLACHODACHÓWKA ZESTAW 5,25 KWP LONGI 525 + DEYE SUN-5K-G05","price":19980.00}, {"name":"BLACHODACHÓWKA ZESTAW 5,775 KWP LONGI 525 + DEYE SUN-5K-G05","price":20783.00}, {"name":"BLACHODACHÓWKA ZESTAW 6,3 KWP LONGI 525 + DEYE SUN-6K-G05","price":21576.00}, {"name":"BLACHODACHÓWKA ZESTAW 6,825 KWP LONGI 525 + DEYE SUN-6K-G05","price":22359.00}, {"name":"BLACHODACHÓWKA ZESTAW 7,35 KWP LONGI 525 + DEYE SUN-8K-G05","price":23132.00}, {"name":"BLACHODACHÓWKA ZESTAW 7,875 KWP LONGI 525 + DEYE SUN-8K-G05","price":23895.00}, {"name":"BLACHODACHÓWKA ZESTAW 8,4 KWP LONGI 525 + DEYE SUN-8K-G05","price":24648.00}, {"name":"BLACHODACHÓWKA ZESTAW 8,925 KWP LONGI 525 + DEYE SUN-8K-G05","price":25391.00}, {"name":"BLACHODACHÓWKA ZESTAW 9,45 KWP LONGI 525 + DEYE SUN-10K-G05","price":26124.00}, {"name":"BLACHODACHÓWKA ZESTAW 9,975 KWP LONGI 525 + DEYE SUN-10K-G05","price":26847.00}, {"name":"BLACHODACHÓWKA ZESTAW 10,5 KWP LONGI 525 + DEYE SUN-10K-G05","price":27460.00}, {"name":"BLACHODACHÓWKA ZESTAW 11,025 KWP LONGI 525 + DEYE SUN-10K-G05","price":28173.00}, {"name":"BLACHODACHÓWKA ZESTAW 11,55 KWP LONGI 525 + DEYE SUN-12K-G05","price":28886.00}, {"name":"BLACHODACHÓWKA ZESTAW 12,075 KWP LONGI 525 + DEYE SUN-10K-G06","price":29599.00}, {"name":"BLACHODACHÓWKA ZESTAW 12,6 KWP LONGI 525 + DEYE SUN-12K-G06","price":30342.00}, {"name":"BLACHODACHÓWKA ZESTAW 13,125 KWP LONGI 525 + DEYE SUN-10K-G07","price":31035.00}, {"name":"BLACHODACHÓWKA ZESTAW 13,65 KWP LONGI 525 + DEYE SUN-12K-G07","price":31718.00}, {"name":"BLACHODACHÓWKA ZESTAW 14,175 KWP LONGI 525 + DEYE SUN-10K-G08","price":32441.00}, {"name":"BLACHODACHÓWKA ZESTAW 14,7 KWP LONGI 525 + DEYE SUN-12K-G08","price":33134.00}, {"name":"BLACHODACHÓWKA ZESTAW 15,225 KWP LONGI 525 + DEYE SUN-10K-G09","price":33827.00} ], "DACHÓWKA":[ {"name":"DACHÓWKA ZESTAW 2,625 KWP LONGI 525 + Deye SUN-3K-G 1F","price":15537.50}, {"name":"DACHÓWKA ZESTAW 3,15 KWP LONGI 525 + Deye SUN-3K-G 1F","price":16295.00}, {"name":"DACHÓWKA ZESTAW 3,675 KWP LONGI 525 + Deye SUN-3K-G 1F","price":16952.50}, {"name":"DACHÓWKA ZESTAW 4,2 KWP LONGI 525 + DEYE SUN-4K-G05","price":18490.00}, {"name":"DACHÓWKA ZESTAW 4,725 KWP LONGI 525 + DEYE SUN-4K-G05","price":19347.50}, {"name":"DACHÓWKA ZESTAW 5,25 KWP LONGI 525 + DEYE SUN-5K-G05","price":20195.00} ], "EKIERKI":[ {"name":"EKIERKI INWAZYJNE ZESTAW 2,625 KWP LONGI 525 + Deye SUN-3K-G 1F","price":15717.50}, {"name":"EKIERKI INWAZYJNE ZESTAW 3,15 KWP LONGI 525 + Deye SUN-3K-G 1F","price":16493.00}, {"name":"EKIERKI INWAZYJNE ZESTAW 3,675 KWP LONGI 525 + Deye SUN-3K-G 1F","price":17168.50}, {"name":"EKIERKI INWAZYJNE ZESTAW 4,2 KWP LONGI 525 + DEYE SUN-4K-G05","price":18764.00}, {"name":"EKIERKI INWAZYJNE ZESTAW 4,725 KWP LONGI 525 + DEYE SUN-4K-G05","price":19639.50}, {"name":"EKIERKI INWAZYJNE ZESTAW 5,25 KWP LONGI 525 + DEYE SUN-5K-G05","price":20505.00} ], "GRUNT":[ {"name":"GRUNT ZESTAW 2,625 KWP LONGI 525 + Deye SUN-3K-G 1F","price":15796.25}, {"name":"GRUNT ZESTAW 3,15 KWP LONGI 525 + Deye SUN-3K-G 1F","price":16587.50}, {"name":"GRUNT ZESTAW 3,675 KWP LONGI 525 + Deye SUN-3K-G 1F","price":17278.75}, {"name":"GRUNT ZESTAW 4,2 KWP LONGI 525 + DEYE SUN-4K-G05","price":18890.00}, {"name":"GRUNT ZESTAW 4,725 KWP LONGI 525 + DEYE SUN-4K-G05","price":19781.25}, {"name":"GRUNT ZESTAW 5,25 KWP LONGI 525 + DEYE SUN-5K-G05","price":20662.50} ] }, "zestawy_niskonapieciowe":{ "TRAPEZ":[ {"name":"TRAPEZ ZESTAW 3,15 KWP LONGI 525 + DEYE SUN-10K-G + MAGAZYN ENERGII LUX-E 5,12 kWh","price":30620.00}, {"name":"TRAPEZ ZESTAW 3,675 KWP LONGI 525 + DEYE SUN-10K-G + MAGAZYN ENERGII LUX-E 5,12 kWh","price":31180.00}, {"name":"TRAPEZ ZESTAW 4,2 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":32660.00}, {"name":"TRAPEZ ZESTAW 4,725 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":33420.00}, {"name":"TRAPEZ ZESTAW 5,25 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":34170.00} ], "BLACHODACHÓWKA":[ {"name":"BLACHODACHÓWKA ZESTAW 3,15 KWP LONGI 525 + DEYE SUN-10K-G + MAGAZYN ENERGII LUX-E 5,12 kWh","price":30998.00}, {"name":"BLACHODACHÓWKA ZESTAW 3,675 KWP LONGI 525 + DEYE SUN-10K-G + MAGAZYN ENERGII LUX-E 5,12 kWh","price":31621.00} ], "DACHÓWKA":[ {"name":"DACHÓWKA ZESTAW 3,15 KWP LONGI 525 + DEYE SUN-10K-G + MAGAZYN ENERGII LUX-E 5,12 kWh","price":31218.50}, {"name":"DACHÓWKA ZESTAW 3,675 KWP LONGI 525 + DEYE SUN-10K-G + MAGAZYN ENERGII LUX-E 5,12 kWh","price":31878.25} ], "EKIERKI":[ {"name":"EKIERKI INWAZYJNE ZESTAW 3,15 KWP LONGI 525 + DEYE SUN-10K-G + MAGAZYN ENERGII LUX-E 5,12 kWh","price":31313.00}, {"name":"EKIERKI INWAZYJNE ZESTAW 3,675 KWP LONGI 525 + DEYE SUN-10K-G + MAGAZYN ENERGII LUX-E 5,12 kWh","price":31988.50} ], "GRUNT":[ {"name":"GRUNT ZESTAW 3,15 KWP LONGI 525 + DEYE SUN-10K-G + MAGAZYN ENERGII LUX-E 5,12 kWh","price":31407.50}, {"name":"GRUNT ZESTAW 3,675 KWP LONGI 525 + DEYE SUN-10K-G + MAGAZYN ENERGII LUX-E 5,12 kWh","price":32098.75} ] }, "zestawy_wysokonapieciowe":{ "TRAPEZ":[ {"name":"TRAPEZ ZESTAW O MOCY 3,15 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":32100.0}, {"name":"TRAPEZ ZESTAW O MOCY 3,675 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":32660.0} ], "DACHÓWKA":[ {"name":"DACHÓWKA ZESTAW O MOCY 3,15 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":32698.50}, {"name":"DACHÓWKA ZESTAW O MOCY 3,675 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":33358.25} ], "BLACHODACHÓWKA":[ {"name":"BLACHODACHÓWKA ZESTAW O MOCY 3,15 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":32478.00}, {"name":"BLACHODACHÓWKA ZESTAW O MOCY 3,675 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":33101.00} ], "EKIERKI":[ {"name":"EKIERKI INWAZYJNE ZESTAW O MOCY 3,15 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":32793.00}, {"name":"EKIERKI INWAZYJNE ZESTAW O MOCY 3,675 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":33468.50} ], "GRUNT":[ {"name":"GRUNT ZESTAW O MOCY 3,15 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":32887.50}, {"name":"GRUNT ZESTAW O MOCY 3,675 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":33578.75} ] } };
 
@@ -301,32 +290,47 @@
         // ... cała reszta logiki PDF bez zmian
     };
     
-    document.querySelectorAll('input, select').forEach(element => {
-        element.addEventListener('input', aktualizujPodsumowanieWizualne);
-        element.addEventListener('change', aktualizujPodsumowanieWizualne);
-    });
-    document.getElementById('typ-pokrycia').addEventListener('change', () => {
-        aktywnaListaId = null;
-        odswiezWszystkieListy();
-        aktualizujPodsumowanieWizualne();
-    });
-    document.querySelectorAll('.lista-produktow').forEach(obecnaLista => {
-        obecnaLista.addEventListener('change', () => {
-            if (obecnaLista.value !== '0') {
-                aktywnaListaId = obecnaLista.id;
-                document.querySelectorAll('.lista-produktow').forEach(innaLista => {
-                    if (innaLista.id !== obecnaLista.id) { innaLista.selectedIndex = 0; }
-                });
+    // POPRAWIONA, OSTATECZNA KOLEJNOŚĆ PODPINANIA FUNKCJI
+    document.addEventListener('DOMContentLoaded', () => {
+        // Najpierw przypisujemy listenery do przycisków
+        document.getElementById('przycisk-zaloguj').addEventListener('click', () => {
+            if (document.getElementById('haslo-dostepu').value === POPRAWNE_HASLO) {
+                document.getElementById('prosty-login').classList.add('ukryty');
+                document.getElementById('glowny-kalkulator').classList.remove('ukryty');
             } else {
-                aktywnaListaId = null;
+                document.getElementById('login-error-prosty').textContent = 'Nieprawidłowe hasło!';
             }
+        });
+        document.getElementById('haslo-dostepu').addEventListener('keyup', (event) => { if (event.key === 'Enter') document.getElementById('przycisk-zaloguj').click(); });
+        document.querySelectorAll('input, select').forEach(element => {
+            element.addEventListener('input', aktualizujPodsumowanieWizualne);
+            element.addEventListener('change', aktualizujPodsumowanieWizualne);
+        });
+        document.getElementById('typ-pokrycia').addEventListener('change', () => {
+            aktywnaListaId = null;
+            odswiezWszystkieListy();
             aktualizujPodsumowanieWizualne();
         });
+        document.querySelectorAll('.lista-produktow').forEach(obecnaLista => {
+            obecnaLista.addEventListener('change', () => {
+                if (obecnaLista.value !== '0') {
+                    aktywnaListaId = obecnaLista.id;
+                    document.querySelectorAll('.lista-produktow').forEach(innaLista => {
+                        if (innaLista.id !== obecnaLista.id) { innaLista.selectedIndex = 0; }
+                    });
+                } else {
+                    aktywnaListaId = null;
+                }
+                aktualizujPodsumowanieWizualne();
+            });
+        });
+        document.getElementById('przycisk-pdf-klient').addEventListener('click', () => generujPDF('klient'));
+        document.getElementById('przycisk-pdf-biuro').addEventListener('click', () => generujPDF('biuro'));
+        
+        // Na końcu inicjujemy pierwsze funkcje
+        odswiezWszystkieListy();
+        aktualizujPodsumowanieWizualne(); // Ta funkcja już nie wczytuje danych, tylko liczy na podstawie stałych
     });
-    document.getElementById('przycisk-pdf-klient').addEventListener('click', () => generujPDF('klient'));
-    document.getElementById('przycisk-pdf-biuro').addEventListener('click', () => generujPDF('biuro'));
-    
-    odswiezWszystkieListy();
 </script>
 </body>
 </html>
