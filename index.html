@@ -69,7 +69,8 @@
         'nadprowizja-firmy': 0,
         'marza-widocznosc': 90
     };
-    const SCRIPT_URL_DO_DANYCH = "!!!https://script.google.com/macros/s/AKfycbzr9sWbZpdA1SeBF1fgEEgM4U_kCVdy7V82LsCowxsoMPvg8oo0X2uMon-w_yAGueopQQ/exec!!!";
+    // === POPRAWIONY ADRES URL ===
+    const SCRIPT_URL_DO_DANYCH = "https://script.google.com/macros/s/AKfycbzmgBCoEwT8-hQsaXNMAkr6lD_uMLY7IESp-zJhyDrtRd1TkJeMfMW_B8T9EEPYCQM2tg/exec";
     const POPRAWNE_HASLO = "ZielonaEnergia2025";
 
     let daneOferty = {}, aktywnaListaId = null, numerZapisanejOferty = null;
@@ -198,10 +199,6 @@
     }
 
     function zapiszOferteWArkuzu(dane) {
-        if (!SCRIPT_URL_DO_DANYCH || SCRIPT_URL_DO_DANYCH.includes("https://script.google.com/macros/s/AKfycbzr9sWbZpdA1SeBF1fgEEgM4U_kCVdy7V82LsCowxsoMPvg8oo0X2uMon-w_yAGueopQQ/exec ")) {
-            console.log("Zapis do arkusza pominięty - brak poprawnego URL skryptu.");
-            return;
-        }
         const daneDoZapisu = {
             action: 'saveOffer',
             numerOferty: numerZapisanejOferty,
@@ -217,17 +214,18 @@
             nadprowizjaKierownika: dane.nadprowizje.kierownik,
             nadprowizjaFirmy: dane.nadprowizje.firma
         };
+
+        // === POPRAWIONA FUNKCJA FETCH ===
         fetch(SCRIPT_URL_DO_DANYCH, {
             method: 'POST',
             mode: 'cors',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify(daneDoZapisu)
         })
         .then(response => response.json())
         .then(data => {
             if (data.result !== "success") {
-                 console.error("Błąd zapisu w Arkuszu:", data.message);
-                 alert("Wystąpił błąd podczas zapisu oferty do Arkusza.");
+                console.error("Błąd zapisu w Arkuszu:", data.message);
+                alert("Wystąpił błąd podczas zapisu oferty do Arkusza: " + data.message);
             } else {
                 console.log("Oferta zapisana pomyślnie w Arkuszu Google.");
             }
@@ -254,7 +252,11 @@
         const numerOfertyDoPDF = numerZapisanejOferty;
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        // ... cała reszta logiki PDF bez zmian
+        // ... Tutaj umieść resztę Twojej logiki do generowania PDF ...
+        // (pozostawiam bez zmian, ponieważ nie dotyczyła błędu)
+        // np. doc.text("To jest przykładowy PDF", 10, 10);
+        // doc.save(`oferta-${numerOfertyDoPDF}.pdf`);
+        alert("Generowanie PDF nie jest w pełni zaimplementowane w tym przykładzie, ale dane zostały wysłane do Arkusza.");
     };
     
     document.addEventListener('DOMContentLoaded', () => {
