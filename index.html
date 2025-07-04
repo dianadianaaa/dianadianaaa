@@ -117,6 +117,10 @@
     let numerZapisanejOferty = null;
     
     const pobierzUstawieniaZArkusza = () => {
+        if (SCRIPT_URL_DO_DANYCH === "https://script.google.com/macros/s/AKfycby9fdGtpHUFXKRSRfIpWE8Utihe9pMYcN0rSl9QHJ6znpgFwn5tRaG6tEIVYeMvyCmg/exec") {
+             alert("KRYTYCZNY BŁĄD: Musisz wkleić swój adres URL z Google Apps Script do pliku HTML, aby aplikacja mogła działać.");
+             return;
+        }
         fetch(SCRIPT_URL_DO_DANYCH)
             .then(response => {
                 if (!response.ok) throw new Error(`Błąd sieci: ${response.statusText}`);
@@ -703,7 +707,7 @@
         })
         .catch(error => {
             console.error("Krytyczny błąd wysyłania danych:", error);
-            alert("Nie udało się wysłać danych do Arkusza Google. Sprawdź połączenie z internetem i ustawienia skryptu.");
+            alert(`Wystąpił krytyczny błąd podczas zapisu do Arkusza Google. Sprawdź konsolę (F12) oraz upewnij się, że skrypt po stronie Google jest poprawnie wdrożony i ma odpowiednie uprawnienia dostępu ('Każdy'). Treść błędu: ${error.message}`);
         });
     };
 
