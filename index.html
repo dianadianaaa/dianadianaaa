@@ -5,9 +5,10 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://script.google.com https://script.googleusercontent.com;">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kalkulator Green Now</title>
-
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://unpkg.com/jspdf-autotable"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-customfonts/1.0.4/vfs_fonts.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
@@ -34,8 +35,6 @@
         #przycisk-pdf-klient:hover { background-color: #1a7448; }
         #przycisk-pdf-biuro { background-color: #555; }
         #przycisk-pdf-biuro:hover { background-color: #333; }
-        #przycisk-zapisz-ustawienia { background-color: #f0ad4e; }
-        #przycisk-zapisz-ustawienia:hover { background-color: #ec971f; }
         .ukryty { display: none; }
         #stale-podsumowanie { border: 2px solid #008170; border-radius: 8px; margin-top: 40px; padding: 20px; background-color: #fafffd; }
         #lista-wybranych-elementow { list-style-type: none; padding-left: 0; margin-bottom: 20px; }
@@ -77,13 +76,8 @@
                     <label for="nadprowizja-firmy">Dodatkowa marża dla firmy (PLN netto):</label>
                     <input type="number" class="admin-input" id="nadprowizja-firmy" value="0" min="0">
                     <hr>
-                    <h3>Inne Ustawienia</h3>
-                    <label for="nazwa-grupy">Nazwa grupy na ofercie:</label>
-                    <input type="text" class="admin-input" id="nazwa-grupy" placeholder="np. POMORZE">
-                    <hr>
                     <label for="marza-widocznosc">Widoczność marży dla PH (%):</label>
                     <input type="number" class="admin-input" id="marza-widocznosc" value="100" min="0" max="100">
-                    <button id="przycisk-zapisz-ustawienia">Zapisz Ustawienia na stałe</button>
                 </div>
                 <div id="formularz-danych">
                     <h3>Dane Klienta</h3>
@@ -103,7 +97,7 @@
             <h3>Podsumowanie Ceny:</h3>
             <div id="podsumowanie-tresc">
                 <p>Koszt Bazowy (dla firmy): <span id="koszt-bazowy">0.00</span> PLN</p>
-                <p>Marża Handlowca (%): <span id="wartosc-marzy">0.00</span> PLN</p>
+                <p>Marża Handlowca (widoczna): <span id="wartosc-marzy">0.00</span> PLN</p>
                 <p>Wartość Netto (z marżą): <span id="suma-netto-final">0.00</span> PLN</p>
                 <p>Podatek VAT: <span id="kwota-vat">0.00</span> PLN</p>
             </div>
@@ -115,80 +109,71 @@
     </div>
 
 <script>
-    const SCRIPT_URL_DO_DANYCH = "https://script.google.com/macros/s/AKfycbxqRRqpc-CJ0zWIVba-2BOZLlU9b071Ujf6VsUAcVLQnAEi0h_oMiIEimv8nE3CaH9ybg/exec";
+    const SCRIPT_URL_DO_DANYCH = "https://script.google.com/macros/s/AKfycby9fdGtpHUFXKRSRfIpWE8Utihe9pMYcN0rSl9QHJ6znpgFwn5tRaG6tEIVYeMvyCmg/execU";
 
     let daneOferty = {};
     let aktywneUstawieniaAdmina = {};
     let aktywnaListaId = null;
     let numerZapisanejOferty = null;
-
+    
     const pobierzUstawieniaZArkusza = () => {
-        fetch(SCRIPT_URL_DO_DANYCH, {
-            redirect: "follow"
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`Błąd sieci: ${response.status} ${response.statusText}`);
-            }
-            return response.json();
-        })
-        .then(settings => {
-            if (settings.error) {
-                throw new Error(settings.error);
-            }
-            aktywneUstawieniaAdmina = settings;
-            document.getElementById('nadprowizja-dyrektora').value = settings['nadprowizja-dyrektora'] || 0;
-            document.getElementById('nadprowizja-kierownika').value = settings['nadprowizja-kierownika'] || 0;
-            document.getElementById('nadprowizja-firmy').value = settings['nadprowizja-firmy'] || 0;
-            document.getElementById('nazwa-grupy').value = settings['nazwa-grupy'] || '';
-            document.getElementById('marza-widocznosc').value = settings['marza-widocznosc'] || 100;
-            document.querySelectorAll('.admin-input').forEach(input => input.readOnly = true);
-            aktualizujPodsumowanieWizualne();
-        })
-        .catch(error => {
-            console.error("Błąd podczas pobierania ustawień:", error);
-            alert(`Nie udało się załadować konfiguracji z Arkusza. Błąd: ${error}`);
-        });
-    };
-
-    const zapiszOferteWArkuzu = (dane, numerOferty) => {
-        const daneDoZapisu = {
-            action: 'saveOffer',
-            numerOferty: numerOferty,
-            dataWygenerowania: new Date().toISOString(),
-            klient: dane.klient.imie,
-            handlowiec: dane.handlowiec.imie,
-            kwotaNetto: dane.obliczenia.sumaNettoFinal,
-            kwotaBrutto: dane.obliczenia.cenaKoncowa,
-            produkty: document.getElementById('lista-wybranych-elementow').innerText.replace(/\n/g, '; '),
-            marzaHandlowca: dane.obliczenia.marzaDlaPH,
-            nadprowizjaDyrektora: dane.nadprowizje.dyrektor,
-            nadprowizjaKierownika: dane.nadprowizje.kierownik,
-            nadprowizjaFirmy: dane.nadprowizje.firma,
-        };
-        
-        fetch(SCRIPT_URL_DO_DANYCH, {
-            method: 'POST',
-            mode: 'cors',
-            redirect: "follow",
-            body: JSON.stringify(daneDoZapisu),
-            headers: { 'Content-Type': 'application/json' }
-        })
-        .then(res => res.text())
-        .then(data => {
-            console.log("Odpowiedź z Arkusza:", data);
-            if (!data.toLowerCase().includes("success")) {
-                 alert("Wystąpił błąd po stronie Arkusza: " + data);
-            } else {
-                 console.log("Oferta zapisana pomyślnie w Arkuszu.");
-            }
-        }).catch(error => {
-            console.error("Błąd podczas zapisu oferty:", error);
-            alert(`Nie udało się zapisać oferty. Błąd: ${error}`);
-        });
+        if (SCRIPT_URL_DO_DANYCH === "https://script.google.com/macros/s/AKfycby9fdGtpHUFXKRSRfIpWE8Utihe9pMYcN0rSl9QHJ6znpgFwn5tRaG6tEIVYeMvyCmg/exec") {
+             alert("UWAGA: Nie wklejono adresu URL skryptu Google. Kalkulator nie będzie mógł zapisywać danych.");
+             return;
+        }
+        fetch(SCRIPT_URL_DO_DANYCH)
+            .then(response => {
+                if (!response.ok) throw new Error(`Błąd sieci: ${response.statusText}`);
+                return response.json();
+            })
+            .then(settings => {
+                if (settings.error) throw new Error(settings.error);
+                aktywneUstawieniaAdmina = settings;
+                document.getElementById('nadprowizja-dyrektora').value = settings['nadprowizja-dyrektora'] || 0;
+                document.getElementById('nadprowizja-kierownika').value = settings['nadprowizja-kierownika'] || 0;
+                document.getElementById('nadprowizja-firmy').value = settings['nadprowizja-firmy'] || 0;
+                document.getElementById('marza-widocznosc').value = settings['marza-widocznosc'] || 100;
+                document.querySelectorAll('.admin-input').forEach(input => input.readOnly = true);
+                aktualizujPodsumowanieWizualne();
+            })
+            .catch(error => {
+                console.error("Błąd podczas pobierania ustawień z Arkusza:", error);
+                alert(`Nie udało się załadować konfiguracji z Arkusza Google. Sprawdź, czy wklejony URL skryptu jest poprawny i czy skrypt jest wdrożony. Błąd: ${error.message}`);
+            });
     };
     
-    // --- POCZĄTEK PEŁNEJ BAZY PRODUKTÓW ---
+    document.addEventListener('DOMContentLoaded', pobierzUstawieniaZArkusza);
+
+    const POPRAWNE_HASLO = "ZielonaEnergia2025";
+    const HASLO_WLASCICIELA = "admin";
+    
+    document.getElementById('przycisk-zaloguj').addEventListener('click', () => {
+        if (document.getElementById('haslo-dostepu').value === POPRAWNE_HASLO) {
+            document.getElementById('prosty-login').classList.add('ukryty');
+            document.getElementById('glowny-kalkulator').classList.remove('ukryty');
+        } else {
+            document.getElementById('login-error-prosty').textContent = 'Nieprawidłowe hasło!';
+        }
+    });
+    
+    document.getElementById('haslo-dostepu').addEventListener('keyup', (event) => { if (event.key === 'Enter') document.getElementById('przycisk-zaloguj').click(); });
+    
+    document.getElementById('przycisk-wlasciciela').addEventListener('click', () => {
+        const haslo = prompt("Podaj hasło właściciela:");
+        if (haslo === HASLO_WLASCICIELA) {
+            const panel = document.getElementById('panel-wlasciciela');
+            panel.classList.toggle('ukryty');
+            panel.querySelectorAll('.admin-input').forEach(input => input.readOnly = panel.classList.contains('ukryty'));
+        } else if (haslo) {
+            alert("Nieprawidłowe hasło właściciela!");
+        }
+    });
+
+    window.przejdzDoEtapu = (numerEtapu) => {
+        document.querySelectorAll('#etapy-kontener .etap').forEach(etap => etap.classList.add('ukryty'));
+        document.getElementById(`etap${numerEtapu}`)?.classList.remove('ukryty');
+    };
+
     const BAZA_PRODUKTOW_UI = {
         "zestawy_sieciowe":{
             "TRAPEZ":[
@@ -354,7 +339,84 @@
                 {"name":"BLACHODACHÓWKA ZESTAW 14,7 KWP LONGI 525 + DEYE SUN-12K-G08 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":48064.00},
                 {"name":"BLACHODACHÓWKA ZESTAW 15,225 KWP LONGI 525 + DEYE SUN-15K-G09 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":48757.00}
             ],
-            "DACHÓWKA":[], "EKIERKI":[], "GRUNT":[]
+            "DACHÓWKA":[
+                {"name":"DACHÓWKA ZESTAW 3,15 KWP LONGI 525 + DEYE SUN-10K-G + MAGAZYN ENERGII LUX-E 5,12 kWh","price":31218.50},
+                {"name":"DACHÓWKA ZESTAW 3,675 KWP LONGI 525 + DEYE SUN-10K-G + MAGAZYN ENERGII LUX-E 5,12 kWh","price":31878.25},
+                {"name":"DACHÓWKA ZESTAW 4,2 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":33458.00},
+                {"name":"DACHÓWKA ZESTAW 4,725 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":34317.75},
+                {"name":"DACHÓWKA ZESTAW 5,25 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":35167.50},
+                {"name":"DACHÓWKA ZESTAW 5,775 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":36007.25},
+                {"name":"DACHÓWKA ZESTAW 6,3 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":36837.00},
+                {"name":"DACHÓWKA ZESTAW 6,825 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":37656.75},
+                {"name":"DACHÓWKA ZESTAW 7,35 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":38466.50},
+                {"name":"DACHÓWKA ZESTAW 7,875 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":39266.25},
+                {"name":"DACHÓWKA ZESTAW 8,4 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":40056.00},
+                {"name":"DACHÓWKA ZESTAW 8,925 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":40835.75},
+                {"name":"DACHÓWKA ZESTAW 9,45 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":41605.50},
+                {"name":"DACHÓWKA ZESTAW 9,975 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":42365.25},
+                {"name":"DACHÓWKA ZESTAW 10,5 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":43125.00},
+                {"name":"DACHÓWKA ZESTAW 11,025 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":43874.75},
+                {"name":"DACHÓWKA ZESTAW 11,55 KWP LONGI 525 + DEYE SUN-12K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":44624.50},
+                {"name":"DACHÓWKA ZESTAW 12,075 KWP LONGI 525 + DEYE SUN-12K-G06 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":45374.25},
+                {"name":"DACHÓWKA ZESTAW 12,6 KWP LONGI 525 + DEYE SUN-12K-G06 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":46154.00},
+                {"name":"DACHÓWKA ZESTAW 13,125 KWP LONGI 525 + DEYE SUN-12K-G07 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":46883.75},
+                {"name":"DACHÓWKA ZESTAW 13,65 KWP LONGI 525 + DEYE SUN-12K-G07 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":47603.50},
+                {"name":"DACHÓWKA ZESTAW 14,175 KWP LONGI 525 + DEYE SUN-12K-G08 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":48363.25},
+                {"name":"DACHÓWKA ZESTAW 14,7 KWP LONGI 525 + DEYE SUN-12K-G08 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":49093.00},
+                {"name":"DACHÓWKA ZESTAW 15,225 KWP LONGI 525 + DEYE SUN-15K-G09 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":49822.75}
+            ],
+            "EKIERKI":[
+                {"name":"EKIERKI INWAZYJNE ZESTAW 3,15 KWP LONGI 525 + DEYE SUN-10K-G + MAGAZYN ENERGII LUX-E 5,12 kWh","price":31313.00},
+                {"name":"EKIERKI INWAZYJNE ZESTAW 3,675 KWP LONGI 525 + DEYE SUN-10K-G + MAGAZYN ENERGII LUX-E 5,12 kWh","price":31988.50},
+                {"name":"EKIERKI INWAZYJNE ZESTAW 4,2 KWP LONGI 525 + DEYE SUN-4K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":33584.00},
+                {"name":"EKIERKI INWAZYJNE ZESTAW 4,725 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":34459.50},
+                {"name":"EKIERKI INWAZYJNE ZESTAW 5,25 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":35325.00},
+                {"name":"EKIERKI INWAZYJNE ZESTAW 5,775 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":36180.50},
+                {"name":"EKIERKI INWAZYJNE ZESTAW 6,3 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":37026.00},
+                {"name":"EKIERKI INWAZYJNE ZESTAW 6,825 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":37861.50},
+                {"name":"EKIERKI INWAZYJNE ZESTAW 7,35 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":38687.00},
+                {"name":"EKIERKI INWAZYJNE ZESTAW 7,875 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":39502.50},
+                {"name":"EKIERKI INWAZYJNE ZESTAW 8,4 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":40308.00},
+                {"name":"EKIERKI INWAZYJNE ZESTAW 8,925 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":41103.50},
+                {"name":"EKIERKI INWAZYJNE ZESTAW 9,45 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":41889.00},
+                {"name":"EKIERKI INWAZYJNE ZESTAW 9,975 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":42664.50},
+                {"name":"EKIERKI INWAZYJNE ZESTAW 10,5 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":43440.00},
+                {"name":"EKIERKI INWAZYJNE ZESTAW 11,025 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":43985.00},
+                {"name":"EKIERKI INWAZYJNE ZESTAW 11,55 KWP LONGI 525 + DEYE SUN-12K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":44740.00},
+                {"name":"EKIERKI INWAZYJNE ZESTAW 12,075 KWP LONGI 525 + DEYE SUN-10K-G06 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":45495.00},
+                {"name":"EKIERKI INWAZYJNE ZESTAW 12,6 KWP LONGI 525 + DEYE SUN-12K-G06 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":46280.00},
+                {"name":"EKIERKI INWAZYJNE ZESTAW 13,125 KWP LONGI 525 + DEYE SUN-10K-G07 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":47015.00},
+                {"name":"EKIERKI INWAZYJNE ZESTAW 13,65 KWP LONGI 525 + DEYE SUN-12K-G07 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":47740.00},
+                {"name":"EKIERKI INWAZYJNE ZESTAW 14,175 KWP LONGI 525 + DEYE SUN-12K-G08 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":48505.00},
+                {"name":"EKIERKI INWAZYJNE ZESTAW 14,7 KWP LONGI 525 + DEYE SUN-12K-G08 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":49240.00},
+                {"name":"EKIERKI INWAZYJNE ZESTAW 15,225 KWP LONGI 525 + DEYE SUN-15K-G09 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":49975.00}
+            ],
+            "GRUNT":[
+                {"name":"GRUNT ZESTAW 3,15 KWP LONGI 525 + DEYE SUN-10K-G + MAGAZYN ENERGII LUX-E 5,12 kWh","price":31407.50},
+                {"name":"GRUNT ZESTAW 3,675 KWP LONGI 525 + DEYE SUN-10K-G + MAGAZYN ENERGII LUX-E 5,12 kWh","price":32098.75},
+                {"name":"GRUNT ZESTAW 4,2 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":33710.00},
+                {"name":"GRUNT ZESTAW 4,725 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":34601.25},
+                {"name":"GRUNT ZESTAW 5,25 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":35482.50},
+                {"name":"GRUNT ZESTAW 5,775 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":36353.75},
+                {"name":"GRUNT ZESTAW 6,3 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":37215.00},
+                {"name":"GRUNT ZESTAW 6,825 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":38066.25},
+                {"name":"GRUNT ZESTAW 7,35 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":38907.50},
+                {"name":"GRUNT ZESTAW 7,875 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":39738.75},
+                {"name":"GRUNT ZESTAW 8,4 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":40560.00},
+                {"name":"GRUNT ZESTAW 8,925 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":41371.25},
+                {"name":"GRUNT ZESTAW 9,45 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":42172.50},
+                {"name":"GRUNT ZESTAW 9,975 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":42963.75},
+                {"name":"GRUNT ZESTAW 10,5 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":43755.00},
+                {"name":"GRUNT ZESTAW 11,025 KWP LONGI 525 + DEYE SUN-10K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":44315.75},
+                {"name":"GRUNT ZESTAW 11,55 KWP LONGI 525 + DEYE SUN-12K-G05 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":45086.50},
+                {"name":"GRUNT ZESTAW 12,075 KWP LONGI 525 + DEYE SUN-12K-G06 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":45857.25},
+                {"name":"GRUNT ZESTAW 12,6 KWP LONGI 525 + DEYE SUN-12K-G06 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":46658.00},
+                {"name":"GRUNT ZESTAW 13,125 KWP LONGI 525 + DEYE SUN-12K-G07 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":47408.75},
+                {"name":"GRUNT ZESTAW 13,65 KWP LONGI 525 + DEYE SUN-12K-G07 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":48149.50},
+                {"name":"GRUNT ZESTAW 14,175 KWP LONGI 525 + DEYE SUN-12K-G08 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":48930.25},
+                {"name":"GRUNT ZESTAW 14,7 KWP LONGI 525 + DEYE SUN-12K-G08 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":49681.00},
+                {"name":"GRUNT ZESTAW 15,225 KWP LONGI 525 + DEYE SUN-15K-G09 + MAGAZYN ENERGII LUX-E 5,12 kWh","price":50431.75}
+            ]
         },
         "zestawy_wysokonapieciowe":{
             "TRAPEZ":[
@@ -409,60 +471,141 @@
                 {"name":"BLACHODACHÓWKA ZESTAW O MOCY 14,7 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":49864.0},
                 {"name":"BLACHODACHÓWKA ZESTAW O MOCY 15,225 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":50607.0}
             ],
-            "DACHÓWKA":[], "EKIERKI":[], "GRUNT":[]
+            "DACHÓWKA":[
+                {"name":"DACHÓWKA ZESTAW O MOCY 3,15 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":32698.5},
+                {"name":"DACHÓWKA ZESTAW O MOCY 3,675 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":33358.25},
+                {"name":"DACHÓWKA ZESTAW O MOCY 4,2 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":34938.0},
+                {"name":"DACHÓWKA ZESTAW O MOCY 4,725 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":35797.75},
+                {"name":"DACHÓWKA ZESTAW O MOCY 5,25 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":36647.5},
+                {"name":"DACHÓWKA ZESTAW O MOCY 5,775 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":37487.25},
+                {"name":"DACHÓWKA ZESTAW O MOCY 6,3 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":38317.0},
+                {"name":"DACHÓWKA ZESTAW O MOCY 6,825 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":39136.75},
+                {"name":"DACHÓWKA ZESTAW O MOCY 7,35 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":39946.5},
+                {"name":"DACHÓWKA ZESTAW O MOCY 7,875 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":40836.25},
+                {"name":"DACHÓWKA ZESTAW O MOCY 8,4 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":41626.0},
+                {"name":"DACHÓWKA ZESTAW O MOCY 8,925 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":42375.75},
+                {"name":"DACHÓWKA ZESTAW O MOCY 9,45 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":43145.5},
+                {"name":"DACHÓWKA ZESTAW O MOCY 9,975 KWP LONGI 525 + GOODWE 10kW+ MAGAZYN 10 kWh","price":43935.25},
+                {"name":"DACHÓWKA ZESTAW O MOCY 10,5 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":44745.0},
+                {"name":"DACHÓWKA ZESTAW O MOCY 11,025 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":45514.75},
+                {"name":"DACHÓWKA ZESTAW O MOCY 11,55 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":46274.5},
+                {"name":"DACHÓWKA ZESTAW O MOCY 12,075 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":47054.25},
+                {"name":"DACHÓWKA ZESTAW O MOCY 12,6 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":47824.0},
+                {"name":"DACHÓWKA ZESTAW O MOCY 13,125 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":48583.75},
+                {"name":"DACHÓWKA ZESTAW O MOCY 13,65 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":49363.5},
+                {"name":"DACHÓWKA ZESTAW O MOCY 14,175 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":50133.25},
+                {"name":"DACHÓWKA ZESTAW O MOCY 14,7 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":50893.0},
+                {"name":"DACHÓWKA ZESTAW O MOCY 15,225 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":51672.75}
+            ],
+            "EKIERKI":[
+                {"name":"EKIERKI INWAZYJNE ZESTAW O MOCY 3,15 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":32793.0},
+                {"name":"EKIERKI INWAZYJNE ZESTAW O MOCY 3,675 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":33468.5},
+                {"name":"EKIERKI INWAZYJNE ZESTAW O MOCY 4,2 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":35064.0},
+                {"name":"EKIERKI INWAZYJNE ZESTAW O MOCY 4,725 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":35939.5},
+                {"name":"EKIERKI INWAZYJNE ZESTAW O MOCY 5,25 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":36805.0},
+                {"name":"EKIERKI INWAZYJNE ZESTAW O MOCY 5,775 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":37660.5},
+                {"name":"EKIERKI INWAZYJNE ZESTAW O MOCY 6,3 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":38506.0},
+                {"name":"EKIERKI INWAZYJNE ZESTAW O MOCY 6,825 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":39341.5},
+                {"name":"EKIERKI INWAZYJNE ZESTAW O MOCY 7,35 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":40167.0},
+                {"name":"EKIERKI INWAZYJNE ZESTAW O MOCY 7,875 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":41072.5},
+                {"name":"EKIERKI INWAZYJNE ZESTAW O MOCY 8,4 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":41878.0},
+                {"name":"EKIERKI INWAZYJNE ZESTAW O MOCY 8,925 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":42643.5},
+                {"name":"EKIERKI INWAZYJNE ZESTAW O MOCY 9,45 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":43429.0},
+                {"name":"EKIERKI INWAZYJNE ZESTAW O MOCY 9,975 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":44234.5},
+                {"name":"EKIERKI INWAZYJNE ZESTAW O MOCY 10,5 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":45060.0},
+                {"name":"EKIERKI INWAZYJNE ZESTAW O MOCY 11,025 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":45625.0},
+                {"name":"EKIERKI INWAZYJNE ZESTAW O MOCY 11,55 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":46390.0},
+                {"name":"EKIERKI INWAZYJNE ZESTAW O MOCY 12,075 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":47175.0},
+                {"name":"EKIERKI INWAZYJNE ZESTAW O MOCY 12,6 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":47950.0},
+                {"name":"EKIERKI INWAZYJNE ZESTAW O MOCY 13,125 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":48715.0},
+                {"name":"EKIERKI INWAZYJNE ZESTAW O MOCY 13,65 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":49500.0},
+                {"name":"EKIERKI INWAZYJNE ZESTAW O MOCY 14,175 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":50275.0},
+                {"name":"EKIERKI INWAZYJNE ZESTAW O MOCY 14,7 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":51040.0},
+                {"name":"EKIERKI INWAZYJNE ZESTAW O MOCY 15,225 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":51825.0}
+            ],
+            "GRUNT":[
+                {"name":"GRUNT ZESTAW O MOCY 3,15 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":32887.5},
+                {"name":"GRUNT ZESTAW O MOCY 3,675 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":33578.75},
+                {"name":"GRUNT ZESTAW O MOCY 4,2 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":35190.0},
+                {"name":"GRUNT ZESTAW O MOCY 4,725 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":36081.25},
+                {"name":"GRUNT ZESTAW O MOCY 5,25 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":36962.5},
+                {"name":"GRUNT ZESTAW O MOCY 5,775 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":37833.75},
+                {"name":"GRUNT ZESTAW O MOCY 6,3 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":38695.0},
+                {"name":"GRUNT ZESTAW O MOCY 6,825 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":39546.25},
+                {"name":"GRUNT ZESTAW O MOCY 7,35 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":40387.5},
+                {"name":"GRUNT ZESTAW O MOCY 7,875 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":41308.75},
+                {"name":"GRUNT ZESTAW O MOCY 8,4 KWP LONGI 525 + GOODWE 8kW + MAGAZYN 10 kWh","price":42130.0},
+                {"name":"GRUNT ZESTAW O MOCY 8,925 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":42911.25},
+                {"name":"GRUNT ZESTAW O MOCY 9,45 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":43712.5},
+                {"name":"GRUNT ZESTAW O MOCY 9,975 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":44533.75},
+                {"name":"GRUNT ZESTAW O MOCY 10,5 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":45375.0},
+                {"name":"GRUNT ZESTAW O MOCY 11,025 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":45955.75},
+                {"name":"GRUNT ZESTAW O MOCY 11,55 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":46736.5},
+                {"name":"GRUNT ZESTAW O MOCY 12,075 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":47537.25},
+                {"name":"GRUNT ZESTAW O MOCY 12,6 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":48328.0},
+                {"name":"GRUNT ZESTAW O MOCY 13,125 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":49108.75},
+                {"name":"GRUNT ZESTAW O MOCY 13,65 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":49909.5},
+                {"name":"GRUNT ZESTAW O MOCY 14,175 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":50700.25},
+                {"name":"GRUNT ZESTAW O MOCY 14,7 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":51481.0},
+                {"name":"GRUNT ZESTAW O MOCY 15,225 KWP LONGI 525 + GOODWE 10kW + MAGAZYN 10 kWh","price":52281.75}
+            ]
         }
     };
-    // --- KONIEC PEŁNEJ BAZY PRODUKTÓW ---
 
     const aktualizujPodsumowanieWizualne = () => {
         numerZapisanejOferty = null;
-        const getPrice = (element) => (element && element.selectedIndex > 0) ? parseFloat(element.options[element.selectedIndex].getAttribute('data-price')) : 0;
-        const getText = (element) => (element && element.selectedIndex > 0) ? element.options[element.selectedIndex].text : "";
+        const getPrice = (el) => (el && el.selectedIndex > 0) ? parseFloat(el.options[el.selectedIndex].dataset.price) : 0;
+        const getText = (el) => (el && el.selectedIndex > 0) ? el.options[el.selectedIndex].text : "";
+
         let wybranyZestaw = { text: "", price: 0 };
         if (aktywnaListaId) {
             const aktywnaLista = document.getElementById(aktywnaListaId);
-            wybranyZestaw.text = getText(aktywnaLista);
-            wybranyZestaw.price = getPrice(aktywnaLista);
+            wybranyZestaw = { text: getText(aktywnaLista), price: getPrice(aktywnaLista) };
         }
+
         const marzaWidocznosc = parseFloat(document.getElementById('marza-widocznosc').value) || 100;
         const nadprowizjaDyrektora = parseFloat(document.getElementById('nadprowizja-dyrektora').value) || 0;
         const nadprowizjaKierownika = parseFloat(document.getElementById('nadprowizja-kierownika').value) || 0;
         const nadprowizjaFirmy = parseFloat(document.getElementById('nadprowizja-firmy').value) || 0;
+
         daneOferty = {
-            typPokrycia: { text: getText(document.getElementById('typ-pokrycia')) },
-            typInstalacji: { text: getText(document.getElementById('typ-instalacji')) },
             zestawPV: wybranyZestaw,
             magazynNisko: { text: getText(document.getElementById('magazyn-niskonapieciowy')), price: getPrice(document.getElementById('magazyn-niskonapieciowy')) },
             magazynWysoko: { text: getText(document.getElementById('magazyn-wysokonapieciowy')), price: getPrice(document.getElementById('magazyn-wysokonapieciowy')) },
             dodatkiMagazyn: { text: getText(document.getElementById('dodatki-magazyn')), price: getPrice(document.getElementById('dodatki-magazyn')) },
             dodatkiModuly: { text: getText(document.getElementById('dodatki-moduly')), price: getPrice(document.getElementById('dodatki-moduly')) },
-            przekop: { text: document.getElementById('przekop').options[document.getElementById('przekop').selectedIndex].text, value: document.getElementById('przekop').value, pricePerMeter: parseFloat(document.getElementById('przekop').options[document.getElementById('przekop').selectedIndex].getAttribute('data-price-per-meter')) || 0, length: parseFloat(document.getElementById('dlugosc-przekopu').value) || 0 },
+            przekop: { text: document.getElementById('przekop').options[document.getElementById('przekop').selectedIndex].text, value: document.getElementById('przekop').value, pricePerMeter: parseFloat(document.getElementById('przekop').options[document.getElementById('przekop').selectedIndex].dataset.pricePerMeter) || 0, length: parseFloat(document.getElementById('dlugosc-przekopu').value) || 0 },
             klimatyzacja: { text: getText(document.getElementById('klimatyzacja')), price: getPrice(document.getElementById('klimatyzacja')) },
             falownikMagazyn: { text: getText(document.getElementById('falownik-magazyn')), price: getPrice(document.getElementById('falownik-magazyn')) },
             inneDodatki: { nazwa: document.getElementById('inne-dodatki-nazwa').value, cena: parseFloat(document.getElementById('inne-dodatki-cena').value) || 0 },
-            stawkaVat: parseFloat(document.getElementById('stawka-vat').value) || 0,
+            stawkaVat: parseFloat(document.getElementById('stawka-vat').value),
             marzaProcent: parseFloat(document.getElementById('marza-procent').value) || 0,
-            nazwaGrupy: document.getElementById('nazwa-grupy').value,
             klient: { imie: document.getElementById('klient-imie').value, adres: document.getElementById('klient-adres').value, kod: document.getElementById('klient-kod').value, telefon: document.getElementById('klient-telefon').value, email: document.getElementById('klient-email').value },
             handlowiec: { imie: document.getElementById('ph-imie').value, telefon: document.getElementById('ph-telefon').value, email: document.getElementById('ph-email').value, teren: document.getElementById('ph-teren').value },
             nadprowizje: { dyrektor: nadprowizjaDyrektora, kierownik: nadprowizjaKierownika, firma: nadprowizjaFirmy },
             ustawieniaMarzy: { widocznosc: marzaWidocznosc }
         };
-        let kosztPodstawowy = daneOferty.zestawPV.price + daneOferty.magazynNisko.price + daneOferty.magazynWysoko.price + daneOferty.dodatkiMagazyn.price + daneOferty.dodatkiModuly.price + (daneOferty.przekop.pricePerMeter * daneOferty.przekop.length) + daneOferty.klimatyzacja.price + daneOferty.falownikMagazyn.price + daneOferty.inneDodatki.cena;
+
+        const kosztPodstawowy = daneOferty.zestawPV.price + daneOferty.magazynNisko.price + daneOferty.magazynWysoko.price + daneOferty.dodatkiMagazyn.price + daneOferty.dodatkiModuly.price + (daneOferty.przekop.pricePerMeter * daneOferty.przekop.length) + daneOferty.klimatyzacja.price + daneOferty.falownikMagazyn.price + daneOferty.inneDodatki.cena;
         const sumaNadprowizji = daneOferty.nadprowizje.dyrektor + daneOferty.nadprowizje.kierownik + daneOferty.nadprowizje.firma;
-        const kosztBazowy = (kosztPodstawowy > 0) ? (kosztPodstawowy + sumaNadprowizji) : 0;
+        const kosztBazowy = kosztPodstawowy + sumaNadprowizji;
         const wartoscMarzyCalkowita = kosztBazowy * (daneOferty.marzaProcent / 100);
         const marzaDlaPH = wartoscMarzyCalkowita * (daneOferty.ustawieniaMarzy.widocznosc / 100);
+        const marzaDlaFirmy = wartoscMarzyCalkowita - marzaDlaPH;
         const sumaNettoFinal = kosztBazowy + wartoscMarzyCalkowita;
         const kwotaVat = sumaNettoFinal * daneOferty.stawkaVat;
         const cenaKoncowa = sumaNettoFinal + kwotaVat;
-        daneOferty.obliczenia = { kosztBazowy, wartoscMarzyCalkowita, marzaDlaPH, sumaNettoFinal, kwotaVat, cenaKoncowa };
+        
+        daneOferty.obliczenia = { kosztBazowy, sumaNettoFinal, kwotaVat, cenaKoncowa, marzaDlaPH, marzaDlaFirmy, wartoscMarzyCalkowita };
+
         document.getElementById('koszt-bazowy').textContent = kosztBazowy.toFixed(2);
         document.getElementById('wartosc-marzy').textContent = marzaDlaPH.toFixed(2);
         document.getElementById('suma-netto-final').textContent = sumaNettoFinal.toFixed(2);
         document.getElementById('kwota-vat').textContent = kwotaVat.toFixed(2);
-        document.getElementById('cena-koncowa').textContent = cenaKoncowa.toFixed(2);
+        document.getElementById('cena-koncowa').textContent = `${cenaKoncowa.toFixed(2)}`;
+        
         document.getElementById('dlugosc-przekopu-kontener').classList.toggle('ukryty', daneOferty.przekop.pricePerMeter <= 0);
+
         const listaElementow = document.getElementById('lista-wybranych-elementow');
         listaElementow.innerHTML = '';
         const dodajDoListy = (etykieta, wartosc) => {
@@ -483,11 +626,11 @@
         dodajDoListy('Dod. Falownik+Magazyn', daneOferty.falownikMagazyn.text);
         if(daneOferty.inneDodatki.cena > 0) dodajDoListy(daneOferty.inneDodatki.nazwa || 'Inne dodatki', daneOferty.inneDodatki.cena);
     };
-
+    
     const wypelnijListe = (selectElement, kategoria, typPokrycia) => {
         const zachowanyValue = selectElement.value;
         selectElement.innerHTML = '<option value="0" data-price="0">-- Wybierz --</option>';
-        const produkty = BAZA_PRODUKTOW_UI?.[kategoria]?.[typPokrycia] || [];
+        const produkty = BAZA_PRODUKTOW_UI[kategoria]?.[typPokrycia] || [];
         if (produkty.length > 0) {
             selectElement.disabled = false;
             produkty.forEach(produkt => {
@@ -501,7 +644,7 @@
         }
         selectElement.value = zachowanyValue;
     };
-    
+
     const odswiezWszystkieListy = () => {
         const wybranyTyp = document.getElementById('typ-pokrycia').value;
         if(wybranyTyp) {
@@ -515,50 +658,74 @@
             });
         }
     };
+    
+    const zbierzOpisProduktow = (dane) => {
+        const produkty = [];
+        if (dane.zestawPV.text) produkty.push(dane.zestawPV.text);
+        if (dane.magazynNisko.text) produkty.push(`Dod. magazyn NN: ${dane.magazynNisko.text}`);
+        if (dane.magazynWysoko.text) produkty.push(`Dod. magazyn WN: ${dane.magazynWysoko.text}`);
+        if (dane.dodatkiMagazyn.text) produkty.push(`Bufor: ${dane.dodatkiMagazyn.text}`);
+        if (dane.dodatkiModuly.text) produkty.push(`Moduły: ${dane.dodatkiModuly.text}`);
+        if (dane.przekop.value !== 'brak' && dane.przekop.length > 0) produkty.push(`Przekop: ${dane.przekop.length}m`);
+        if (dane.klimatyzacja.text) produkty.push(dane.klimatyzacja.text);
+        if (dane.falownikMagazyn.text) produkty.push(dane.falownikMagazyn.text);
+        if (dane.inneDodatki.nazwa && dane.inneDodatki.cena > 0) produkty.push(`${dane.inneDodatki.nazwa}`);
+        return produkty.join('; ');
+    };
 
-    const zapiszUstawienia = () => {
-        const dataDoZapisu = {
-            action: 'saveSettings',
-            settings: {
-                'nadprowizja-dyrektora': parseFloat(document.getElementById('nadprowizja-dyrektora').value) || 0,
-                'nadprowizja-kierownika': parseFloat(document.getElementById('nadprowizja-kierownika').value) || 0,
-                'nadprowizja-firmy': parseFloat(document.getElementById('nadprowizja-firmy').value) || 0,
-                'marza-widocznosc': parseFloat(document.getElementById('marza-widocznosc').value) || 100,
-                'nazwa-grupy': document.getElementById('nazwa-grupy').value || ''
-            }
+    const zapiszOferteWArkuzu = (dane) => {
+        const daneDoZapisu = {
+            action: 'saveOffer',
+            numerOferty: numerZapisanejOferty,
+            dataWygenerowania: new Date().toISOString(),
+            klient: `${dane.klient.imie}, ${dane.klient.adres}, ${dane.klient.kod}`,
+            handlowiec: dane.handlowiec.imie,
+            kwotaNetto: dane.obliczenia.sumaNettoFinal,
+            kwotaBrutto: dane.obliczenia.cenaKoncowa,
+            produkty: zbierzOpisProduktow(dane),
+            marzaHandlowca: dane.obliczenia.marzaDlaPH,
+            marzaDlaFirmy: dane.obliczenia.marzaDlaFirmy,
+            nadprowizjaDyrektora: dane.nadprowizje.dyrektor,
+            nadprowizjaKierownika: dane.nadprowizje.kierownik,
+            nadprowizjaFirmy: dane.nadprowizje.firma
         };
+
         fetch(SCRIPT_URL_DO_DANYCH, {
             method: 'POST',
             mode: 'cors',
-            redirect: "follow",
-            body: JSON.stringify(dataDoZapisu),
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(daneDoZapisu)
         })
-        .then(res => res.text())
+        .then(response => response.json())
         .then(data => {
-            if(data.toLowerCase().includes("success")) {
-                alert("Ustawienia zostały zapisane na stałe!");
+            if (data.result !== "success") {
+                 console.error("Błąd zapisu w Arkuszu:", data.message);
+                 alert("Wystąpił błąd podczas zapisu oferty do Arkusza. Sprawdź konsolę (F12) po więcej informacji.");
             } else {
-                alert("Wystąpił błąd podczas zapisu ustawień: " + data);
+                console.log("Oferta zapisana pomyślnie w Arkuszu Google.");
             }
         })
         .catch(error => {
-            alert(`Wystąpił krytyczny błąd podczas zapisu ustawień. Treść błędu: ${error.message}`);
+            console.error("Krytyczny błąd wysyłania danych:", error);
+            alert("Nie udało się wysłać danych do Arkusza Google. Sprawdź połączenie z internetem i ustawienia skryptu.");
         });
     };
 
     const generujPDF = (typ) => {
         aktualizujPodsumowanieWizualne(); 
-        if (!daneOferty.klient.imie || !daneOferty.handlowiec.imie) {
-            alert("Proszę wypełnić dane Klienta i Handlowca przed wygenerowaniem oferty.");
+        if (!daneOferty.klient.imie) {
+            alert("Proszę wypełnić dane klienta przed wygenerowaniem oferty.");
             przejdzDoEtapu(4);
+            document.getElementById('klient-imie').focus();
             return;
         }
+
         if (numerZapisanejOferty === null) {
             const dzisiaj = new Date();
             numerZapisanejOferty = `GN/${dzisiaj.getDate().toString().padStart(2, '0')}${(dzisiaj.getMonth() + 1).toString().padStart(2, '0')}${dzisiaj.getFullYear()}/${String(Date.now()).slice(-4)}`;
-            zapiszOferteWArkuzu(daneOferty, numerZapisanejOferty);
+            zapiszOferteWArkuzu(daneOferty);
         }
+        
         const numerOfertyDoPDF = numerZapisanejOferty;
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
@@ -575,10 +742,6 @@
         doc.setTextColor(51, 51, 51);
         doc.text(`Nr oferty: ${numerOfertyDoPDF}`, 195, 30, { align: 'right' });
         doc.text(`Data: ${dzisiaj.toLocaleDateString('pl-PL')}`, 195, 35, { align: 'right' });
-        if (daneOferty.nazwaGrupy) {
-            doc.setFont('helvetica', 'bold');
-            doc.text(`Grupa: ${daneOferty.nazwaGrupy}`, 195, 40, { align: 'right' });
-        }
         let y = 55;
         doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
@@ -615,51 +778,32 @@
             styles: { font: 'helvetica', cellPadding: 2.5 }, columnStyles: { 0: { cellWidth: 10 } }
         });
         y = doc.lastAutoTable.finalY + 10;
-        const { sumaNettoFinal, kwotaVat, cenaKoncowa, marzaDlaPH, kosztBazowy } = daneOferty.obliczenia;
+        const { sumaNettoFinal, kwotaVat, cenaKoncowa, marzaDlaPH } = daneOferty.obliczenia;
+        
         const cenyBodyKlient = [
             [`Wartość Netto:`, `${sumaNettoFinal.toFixed(2)} PLN`],
             [`Podatek VAT (${(daneOferty.stawkaVat * 100).toFixed(0)}%):`, `${kwotaVat.toFixed(2)} PLN`],
-            [{ content: 'Wartość Brutto:', styles: { fontStyle: 'bold', fontSize: 11, fillColor: [224, 255, 230] } }, { content: `${cenaKoncowa.toFixed(2)} PLN`, styles: { fontStyle: 'bold', fontSize: 11, fillColor: [224, 255, 230] } }]
+            [{ content: 'Wartość Brutto:', styles: { font: 'helvetica', fontStyle: 'bold', fontSize: 11, fillColor: [224, 255, 230] } }, { content: `${cenaKoncowa.toFixed(2)} PLN`, styles: { font: 'helvetica', fontStyle: 'bold', fontSize: 11, fillColor: [224, 255, 230] } }]
         ];
         const cenyBodyBiuro = [
-            ['Koszt Bazowy (dla firmy):', `${kosztBazowy.toFixed(2)} PLN`],
-            ['Marża Handlowca (widoczna):', `${marzaDlaPH.toFixed(2)} PLN`],
             [{content: 'SUMA Netto (dla klienta):', styles: {fontStyle: 'bold'}}, {content: `${sumaNettoFinal.toFixed(2)} PLN`, styles: {fontStyle: 'bold'}}],
+            ['Marża dla Handlowca (widoczna):', `${marzaDlaPH.toFixed(2)} PLN`],
             ['Podatek VAT:', `${kwotaVat.toFixed(2)} PLN`],
-            [{ content: 'SUMA Brutto (dla klienta):', styles: { fontStyle: 'bold', fillColor: '#f0f0f0' } }, { content: `${cenaKoncowa.toFixed(2)} PLN`, styles: { fontStyle: 'bold', fillColor: '#f0f0f0' } }]
+            [{ content: 'SUMA Brutto (dla klienta):', styles: { font: 'helvetica', fontStyle: 'bold', fillColor: '#f0f0f0' } }, { content: `${cenaKoncowa.toFixed(2)} PLN`, styles: { font: 'helvetica', fontStyle: 'bold', fillColor: '#f0f0f0' } }]
         ];
         doc.autoTable({ startY: y, body: typ === 'klient' ? cenyBodyKlient : cenyBodyBiuro, theme: 'grid', styles: { font: 'helvetica' }, columnStyles: { 0: { fontStyle: 'bold' }, 1: { halign: 'right' } } });
         y = doc.lastAutoTable.finalY;
         const nazwaPliku = `${typ === 'klient' ? 'Oferta' : 'Podsumowanie'}_${daneOferty.klient.imie.replace(/[^a-z0-9]/gi, '_')}.pdf`;
         doc.save(nazwaPliku);
     };
-
-    document.addEventListener('DOMContentLoaded', () => {
-        pobierzUstawieniaZArkusza();
-        odswiezWszystkieListy();
-    });
     
-    document.getElementById('przycisk-zaloguj').addEventListener('click', () => {
-        if (document.getElementById('haslo-dostepu').value === POPRAWNE_HASLO) {
-            document.getElementById('prosty-login').classList.add('ukryty');
-            document.getElementById('glowny-kalkulator').classList.remove('ukryty');
-        } else {
-            document.getElementById('login-error-prosty').textContent = 'Nieprawidłowe hasło!';
-        }
-    });
-
     document.querySelectorAll('input, select').forEach(element => {
-        if (element.id !== 'haslo-dostepu') { // Nie dodajemy do hasła, żeby nie kolidowało z logowaniem
-            element.addEventListener('input', aktualizujPodsumowanieWizualne);
-            element.addEventListener('change', aktualizujPodsumowanieWizualne);
-        }
+        element.addEventListener('input', aktualizujPodsumowanieWizualne);
+        element.addEventListener('change', aktualizujPodsumowanieWizualne);
     });
 
-    document.getElementById('przycisk-zapisz-ustawienia').addEventListener('click', zapiszUstawienia);
-    
     document.getElementById('typ-pokrycia').addEventListener('change', () => {
         aktywnaListaId = null;
-        document.querySelectorAll('.lista-produktow').forEach(lista => lista.selectedIndex = 0);
         odswiezWszystkieListy();
         aktualizujPodsumowanieWizualne();
     });
@@ -677,9 +821,11 @@
             aktualizujPodsumowanieWizualne();
         });
     });
-    
+
     document.getElementById('przycisk-pdf-klient').addEventListener('click', () => generujPDF('klient'));
     document.getElementById('przycisk-pdf-biuro').addEventListener('click', () => generujPDF('biuro'));
+    
+    odswiezWszystkieListy();
 </script>
 </body>
 </html>
