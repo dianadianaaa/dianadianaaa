@@ -109,7 +109,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL_DO_DANYCH = "https://script.google.com/macros/s/AKfycby9fdGtpHUFXKRSRfIpWE8Utihe9pMYcN0rSl9QHJ6znpgFwn5tRaG6tEIVYeMvyCmg/execU";
+    const SCRIPT_URL_DO_DANYCH = "https://script.google.com/macros/s/AKfycby9fdGtpHUFXKRSRfIpWE8Utihe9pMYcN0rSl9QHJ6znpgFwn5tRaG6tEIVYeMvyCmg/exec";
 
     let daneOferty = {};
     let aktywneUstawieniaAdmina = {};
@@ -117,10 +117,6 @@
     let numerZapisanejOferty = null;
     
     const pobierzUstawieniaZArkusza = () => {
-        if (SCRIPT_URL_DO_DANYCH === "https://script.google.com/macros/s/AKfycby9fdGtpHUFXKRSRfIpWE8Utihe9pMYcN0rSl9QHJ6znpgFwn5tRaG6tEIVYeMvyCmg/exec") {
-             alert("UWAGA: Nie wklejono adresu URL skryptu Google. Kalkulator nie będzie mógł zapisywać danych.");
-             return;
-        }
         fetch(SCRIPT_URL_DO_DANYCH)
             .then(response => {
                 if (!response.ok) throw new Error(`Błąd sieci: ${response.statusText}`);
