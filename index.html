@@ -5,9 +5,10 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://script.google.com https://script.googleusercontent.com;">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kalkulator Green Now</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-customfonts/1.0.4/vfs_fonts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/roboto-font@0.1.0/fonts/Roboto/roboto-regular-normal.js"></script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; color: #333; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
@@ -234,7 +235,7 @@
         });
     }
 
-   function generujPDF(typ) {
+function generujPDF(typ) {
     aktualizujPodsumowanieWizualne(); 
     if (!daneOferty.klient.imie) {
         alert("Proszę wypełnić dane klienta przed wygenerowaniem oferty.");
@@ -252,21 +253,20 @@
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
-    // === POCZĄTEK ZMIAN - ZMIANA CZCIONKI NA 'Roboto' ===
-
     // Ustawiamy domyślną czcionkę na Roboto dla całego dokumentu
-    doc.setFont('Roboto', 'normal');
+    // Ta czcionka jest teraz ładowana z nowego skryptu, który dodałeś
+    doc.setFont('Roboto-Regular', 'normal');
 
     doc.setFillColor(244, 247, 246);
     doc.rect(0, 0, 210, 45, 'F');
 
-    doc.setFont('Roboto', 'bold'); // Zmiana z 'helvetica'
+    doc.setFont('Roboto-Regular', 'bold');
     doc.setFontSize(20);
     doc.setTextColor(0, 91, 65);
     doc.text(typ === 'klient' ? "OFERTA HANDLOWA" : "PODSUMOWANIE DLA BIURA", 105, 20, { align: 'center' });
     
     const dzisiaj = new Date();
-    doc.setFont('Roboto', 'normal'); // Zmiana z 'helvetica'
+    doc.setFont('Roboto-Regular', 'normal');
     doc.setFontSize(10);
     doc.setTextColor(51, 51, 51);
     doc.text(`Nr oferty: ${numerOfertyDoPDF}`, 195, 30, { align: 'right' });
@@ -274,13 +274,13 @@
     
     let y = 55;
     doc.setFontSize(12);
-    doc.setFont('Roboto', 'bold'); // Zmiana z 'helvetica'
+    doc.setFont('Roboto-Regular', 'bold');
     doc.setTextColor(0, 91, 65);
     doc.text("Nabywca:", 20, y);
     doc.text("Sprzedawca:", 110, y);
     
     doc.setFontSize(10);
-    doc.setFont('Roboto', 'normal'); // Zmiana z 'helvetica'
+    doc.setFont('Roboto-Regular', 'normal');
     doc.setTextColor(51, 51, 51);
     doc.text(daneOferty.klient.imie, 20, y + 7);
     doc.text(daneOferty.klient.adres, 20, y + 12);
@@ -288,9 +288,9 @@
     doc.text(`Tel: ${daneOferty.klient.telefon}`, 20, y + 22);
     doc.text(`Email: ${daneOferty.klient.email}`, 20, y + 27);
     
-    doc.setFont('Roboto', 'bold'); // Zmiana z 'helvetica'
+    doc.setFont('Roboto-Regular', 'bold');
     doc.text("GREEN NOW SP. Z O.O.", 110, y + 7);
-    doc.setFont('Roboto', 'normal'); // Zmiana z 'helvetica'
+    doc.setFont('Roboto-Regular', 'normal');
     doc.text(`Przedstawiciel: ${daneOferty.handlowiec.imie}`, 110, y + 12);
     doc.text(`Tel: ${daneOferty.handlowiec.telefon}`, 110, y + 17);
     doc.text(`Email: ${daneOferty.handlowiec.email}`, 110, y + 22);
@@ -312,8 +312,8 @@
         head: [['Lp.', 'Element', 'Opis']],
         body: specyfikacjaBody,
         theme: 'striped',
-        headStyles: { fillColor: [0, 91, 65], font: 'Roboto', fontStyle: 'bold' }, // Zmiana z 'helvetica'
-        styles: { font: 'Roboto', cellPadding: 2.5 }, // Zmiana z 'helvetica'
+        headStyles: { fillColor: [0, 91, 65], font: 'Roboto-Regular', fontStyle: 'bold' },
+        styles: { font: 'Roboto-Regular', cellPadding: 2.5 },
         columnStyles: { 0: { cellWidth: 10 } }
     });
     
@@ -324,21 +324,21 @@
     const cenyBodyKlient = [
         [`Wartość Netto:`, `${sumaNettoFinal.toFixed(2)} PLN`],
         [`Podatek VAT (${(daneOferty.stawkaVat * 100).toFixed(0)}%):`, `${kwotaVat.toFixed(2)} PLN`],
-        [{ content: 'Wartość Brutto:', styles: { font: 'Roboto', fontStyle: 'bold', fontSize: 11, fillColor: [224, 255, 230] } }, { content: `${cenaKoncowa.toFixed(2)} PLN`, styles: { font: 'Roboto', fontStyle: 'bold', fontSize: 11, fillColor: [224, 255, 230] } }]
+        [{ content: 'Wartość Brutto:', styles: { font: 'Roboto-Regular', fontStyle: 'bold', fontSize: 11, fillColor: [224, 255, 230] } }, { content: `${cenaKoncowa.toFixed(2)} PLN`, styles: { font: 'Roboto-Regular', fontStyle: 'bold', fontSize: 11, fillColor: [224, 255, 230] } }]
     ];
     
     const cenyBodyBiuro = [
         [{content: 'SUMA Netto (dla klienta):', styles: {fontStyle: 'bold'}}, {content: `${sumaNettoFinal.toFixed(2)} PLN`, styles: {fontStyle: 'bold'}}],
-        ['Marża dla Handlowca :', `${marzaDlaPH.toFixed(2)} PLN`],
+        ['Marża dla Handlowca (widoczna):', `${marzaDlaPH.toFixed(2)} PLN`],
         ['Podatek VAT:', `${kwotaVat.toFixed(2)} PLN`],
-        [{ content: 'SUMA Brutto (dla klienta):', styles: { font: 'Roboto', fontStyle: 'bold', fillColor: '#f0f0f0' } }, { content: `${cenaKoncowa.toFixed(2)} PLN`, styles: { font: 'Roboto', fontStyle: 'bold', fillColor: '#f0f0f0' } }]
+        [{ content: 'SUMA Brutto (dla klienta):', styles: { font: 'Roboto-Regular', fontStyle: 'bold', fillColor: '#f0f0f0' } }, { content: `${cenaKoncowa.toFixed(2)} PLN`, styles: { font: 'Roboto-Regular', fontStyle: 'bold', fillColor: '#f0f0f0' } }]
     ];
     
     doc.autoTable({
         startY: y,
         body: typ === 'klient' ? cenyBodyKlient : cenyBodyBiuro,
         theme: 'grid',
-        styles: { font: 'Roboto' }, // Zmiana z 'helvetica'
+        styles: { font: 'Roboto-Regular' },
         columnStyles: { 0: { fontStyle: 'bold' }, 1: { halign: 'right' } }
     });
     
