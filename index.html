@@ -78,6 +78,7 @@
                     <hr>
                     <label for="marza-widocznosc">Widoczność marży dla PH (%):</label>
                     <input type="number" class="admin-input" id="marza-widocznosc" value="100" min="0" max="100">
+                    <button id="przycisk-zapisz-ustawienia" style="background-color: #f0ad4e; margin-top: 20px;">Zapisz ustawienia na stałe</button>
                 </div>
                 <div id="formularz-danych">
                     <h3>Dane Klienta</h3>
@@ -556,18 +557,15 @@
         numerZapisanejOferty = null;
         const getPrice = (el) => (el && el.selectedIndex > 0) ? parseFloat(el.options[el.selectedIndex].dataset.price) : 0;
         const getText = (el) => (el && el.selectedIndex > 0) ? el.options[el.selectedIndex].text : "";
-
         let wybranyZestaw = { text: "", price: 0 };
         if (aktywnaListaId) {
             const aktywnaLista = document.getElementById(aktywnaListaId);
             wybranyZestaw = { text: getText(aktywnaLista), price: getPrice(aktywnaLista) };
         }
-
         const marzaWidocznosc = parseFloat(document.getElementById('marza-widocznosc').value) || 100;
         const nadprowizjaDyrektora = parseFloat(document.getElementById('nadprowizja-dyrektora').value) || 0;
         const nadprowizjaKierownika = parseFloat(document.getElementById('nadprowizja-kierownika').value) || 0;
         const nadprowizjaFirmy = parseFloat(document.getElementById('nadprowizja-firmy').value) || 0;
-
         daneOferty = {
             zestawPV: wybranyZestaw,
             magazynNisko: { text: getText(document.getElementById('magazyn-niskonapieciowy')), price: getPrice(document.getElementById('magazyn-niskonapieciowy')) },
@@ -585,7 +583,6 @@
             nadprowizje: { dyrektor: nadprowizjaDyrektora, kierownik: nadprowizjaKierownika, firma: nadprowizjaFirmy },
             ustawieniaMarzy: { widocznosc: marzaWidocznosc }
         };
-
         const kosztPodstawowy = daneOferty.zestawPV.price + daneOferty.magazynNisko.price + daneOferty.magazynWysoko.price + daneOferty.dodatkiMagazyn.price + daneOferty.dodatkiModuly.price + (daneOferty.przekop.pricePerMeter * daneOferty.przekop.length) + daneOferty.klimatyzacja.price + daneOferty.falownikMagazyn.price + daneOferty.inneDodatki.cena;
         const sumaNadprowizji = daneOferty.nadprowizje.dyrektor + daneOferty.nadprowizje.kierownik + daneOferty.nadprowizje.firma;
         const kosztBazowy = kosztPodstawowy + sumaNadprowizji;
@@ -595,17 +592,13 @@
         const sumaNettoFinal = kosztBazowy + wartoscMarzyCalkowita;
         const kwotaVat = sumaNettoFinal * daneOferty.stawkaVat;
         const cenaKoncowa = sumaNettoFinal + kwotaVat;
-        
         daneOferty.obliczenia = { kosztBazowy, sumaNettoFinal, kwotaVat, cenaKoncowa, marzaDlaPH, marzaDlaFirmy, wartoscMarzyCalkowita };
-
         document.getElementById('koszt-bazowy').textContent = kosztBazowy.toFixed(2);
         document.getElementById('wartosc-marzy').textContent = marzaDlaPH.toFixed(2);
         document.getElementById('suma-netto-final').textContent = sumaNettoFinal.toFixed(2);
         document.getElementById('kwota-vat').textContent = kwotaVat.toFixed(2);
         document.getElementById('cena-koncowa').textContent = `${cenaKoncowa.toFixed(2)}`;
-        
         document.getElementById('dlugosc-przekopu-kontener').classList.toggle('ukryty', daneOferty.przekop.pricePerMeter <= 0);
-
         const listaElementow = document.getElementById('lista-wybranych-elementow');
         listaElementow.innerHTML = '';
         const dodajDoListy = (etykieta, wartosc) => {
@@ -689,7 +682,6 @@
             nadprowizjaKierownika: dane.nadprowizje.kierownik,
             nadprowizjaFirmy: dane.nadprowizje.firma
         };
-
         fetch(SCRIPT_URL_DO_DANYCH, {
             method: 'POST',
             mode: 'cors',
@@ -711,6 +703,37 @@
         });
     };
 
+    const zapiszUstawienia = () => {
+        const ustawieniaDoZapisu = {
+            'nadprowizja-dyrektora': parseFloat(document.getElementById('nadprowizja-dyrektora').value) || 0,
+            'nadprowizja-kierownika': parseFloat(document.getElementById('nadprowizja-kierownika').value) || 0,
+            'nadprowizja-firmy': parseFloat(document.getElementById('nadprowizja-firmy').value) || 0,
+            'marza-widocznosc': parseFloat(document.getElementById('marza-widocznosc').value) || 100
+        };
+        const payload = {
+            action: 'saveSettings',
+            settings: ustawieniaDoZapisu
+        };
+        fetch(SCRIPT_URL_DO_DANYCH, {
+            method: 'POST',
+            mode: 'cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.result === 'success') {
+                alert('Ustawienia zostały zapisane na stałe!');
+            } else {
+                alert('Wystąpił błąd podczas zapisu ustawień: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error("Błąd zapisu ustawień:", error);
+            alert("Błąd krytyczny: Nie udało się wysłać ustawień.");
+        });
+    };
+
     const generujPDF = (typ) => {
         aktualizujPodsumowanieWizualne(); 
         if (!daneOferty.klient.imie) {
@@ -719,13 +742,11 @@
             document.getElementById('klient-imie').focus();
             return;
         }
-
         if (numerZapisanejOferty === null) {
             const dzisiaj = new Date();
             numerZapisanejOferty = `GN/${dzisiaj.getDate().toString().padStart(2, '0')}${(dzisiaj.getMonth() + 1).toString().padStart(2, '0')}${dzisiaj.getFullYear()}/${String(Date.now()).slice(-4)}`;
             zapiszOferteWArkuzu(daneOferty);
         }
-        
         const numerOfertyDoPDF = numerZapisanejOferty;
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
@@ -801,13 +822,11 @@
         element.addEventListener('input', aktualizujPodsumowanieWizualne);
         element.addEventListener('change', aktualizujPodsumowanieWizualne);
     });
-
     document.getElementById('typ-pokrycia').addEventListener('change', () => {
         aktywnaListaId = null;
         odswiezWszystkieListy();
         aktualizujPodsumowanieWizualne();
     });
-
     document.querySelectorAll('.lista-produktow').forEach(obecnaLista => {
         obecnaLista.addEventListener('change', () => {
             if (obecnaLista.value !== '0') {
@@ -821,9 +840,9 @@
             aktualizujPodsumowanieWizualne();
         });
     });
-
     document.getElementById('przycisk-pdf-klient').addEventListener('click', () => generujPDF('klient'));
     document.getElementById('przycisk-pdf-biuro').addEventListener('click', () => generujPDF('biuro'));
+    document.getElementById('przycisk-zapisz-ustawienia').addEventListener('click', zapiszUstawienia);
     
     odswiezWszystkieListy();
 </script>
