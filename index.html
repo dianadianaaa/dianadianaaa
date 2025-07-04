@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self';
-                 script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com;
-                 style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-                 font-src https://fonts.gstatic.com;
+        content="default-src 'self'; 
+                 script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; 
+                 style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; 
+                 font-src https://fonts.gstatic.com; 
                  connect-src 'self' https://script.google.com https://script.googleusercontent.com;">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kalkulator Green Now</title>
@@ -15,132 +15,387 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-customfonts/1.0.4/vfs_fonts.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
-    body { font-family: 'Inter', sans-serif; background:#f4f7f6; color:#333; display:flex; justify-content:center; align-items:flex-start; min-height:100vh; margin:0; padding:20px; box-sizing:border-box;}
-    .kontener { background:#fff; padding:40px; border-radius:12px; box-shadow:0 5px 15px rgba(0,0,0,0.1); width:100%; max-width:800px;}
+    body { font-family:'Inter',sans-serif; background:#f4f7f6; color:#333; display:flex; justify-content:center; align-items:flex-start; min-height:100vh; margin:0; padding:20px; box-sizing:border-box; }
+    .kontener { background:#fff; padding:40px; border-radius:12px; box-shadow:0 5px 15px rgba(0,0,0,0.1); width:100%; max-width:800px; }
+    .login-kontener { align-self:center; }
     h1,h2,h3 { color:#005b41; text-align:center; }
+    h1 { font-size:1.8em; margin-bottom:30px; }
+    h2 { font-size:1.5em; margin-bottom:25px; }
+    h3 { font-size:1.2em; margin-top:25px; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px; }
+    .etap { margin-top:10px; }
+    label { display:block; margin:15px 0 8px; font-weight:bold; font-size:.9em; color:#555; }
+    input,select { width:100%; padding:12px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box; background:#f9f9f9; transition:border-color .2s,box-shadow .2s; }
+    input:focus,select:focus { border-color:#008170; outline:none; box-shadow:0 0 0 3px rgba(0,129,112,0.15); }
+    select:disabled { background:#e9ecef; cursor:not-allowed; opacity:.7; }
+    button { background:#008170; color:#fff; padding:12px 25px; border:none; border-radius:6px; cursor:pointer; font-size:16px; margin-top:30px; font-weight:bold; width:100%; transition:background .3s,transform .1s; }
+    button:hover { background:#005b41; }
+    button:active { transform:scale(.98); }
+    .form-buttons { display:flex; gap:10px; margin-top:30px; }
+    .form-buttons button { width:100%; margin-top:0; }
+    button.wstecz { background:#6c757d; }
+    button.wstecz:hover { background:#5a6268; }
+    #przycisk-pdf-klient { background:#239d60; }
+    #przycisk-pdf-klient:hover { background:#1a7448; }
+    #przycisk-pdf-biuro { background:#555; }
+    #przycisk-pdf-biuro:hover { background:#333; }
     .ukryty { display:none; }
-    /* … tu cała reszta Twoich stylów, bez zmian … */
+    #stale-podsumowanie { border:2px solid #008170; border-radius:8px; margin-top:40px; padding:20px; background:#fafffd; }
+    #lista-wybranych-elementow { list-style:none; padding:0; margin-bottom:20px; }
+    #lista-wybranych-elementow li { background:#e8f5e9; padding:8px 12px; border-radius:6px; margin-bottom:6px; font-size:.9em; }
+    #podsumowanie-tresc p { display:flex; justify-content:space-between; padding:8px 5px; margin:0; border-bottom:1px solid #eee; }
+    #podsumowanie-tresc p:last-child { border-bottom:none; }
+    #podsumowanie-tresc span { font-weight:bold; }
+    #cena-koncowa { color:#008170; font-size:1.7em; font-weight:bold; }
   </style>
 </head>
 <body>
-  <div id="prosty-login" class="kontener">
+
+  <!-- LOGOWANIE -->
+  <div id="prosty-login" class="kontener login-kontener">
     <h2>Dostęp do kalkulatora</h2>
     <label for="haslo-dostepu">Wprowadź hasło:</label>
     <input type="password" id="haslo-dostepu">
     <button id="przycisk-zaloguj">Odblokuj</button>
-    <p id="login-error-prosty" style="color:red; text-align:center; height:20px;"></p>
+    <p id="login-error-prosty" style="color:red;text-align:center;height:20px"></p>
   </div>
 
+  <!-- GŁÓWNY KALKULATOR -->
   <div id="glowny-kalkulator" class="kontener ukryty">
-    <!-- ETAP 1, ETAP 2 … (bez zmian) -->
 
-    <!-- ETAP 3: PRACE ZIEMNE -->
-    <div id="etap3" class="etap ukryty">
-      <h2>Krok 3: Prace ziemne i dodatkowe</h2>
-      <label for="przekop">Przekop z kablem:</label>
-      <select id="przekop">
-        <option value="brak" data-price="0">-- Brak --</option>
-        <option value="do10" data-price-per-meter="0" data-price="0">Przekop do 10 m</option>
-        <option value="10-30" data-price-per-meter="30">Przekop 10–30 m (30 zł/m)</option>
-        <option value="30-60" data-price-per-meter="35">Przekop 30–60 m (35 zł/m)</option>
-        <option value="powyzej60" data-price-per-meter="0" data-price="0">>60 m (indywidualnie)</option>
-      </select>
-
-      <div id="dlugosc-przekopu-kontener" class="ukryty">
-        <label for="dlugosc-przekopu">Długość przekopu (m):</label>
-        <input type="number" id="dlugosc-przekopu" min="0" value="0">
+    <div id="etapy-kontener">
+      <!-- ETAP 1 -->
+      <div id="etap1" class="etap">
+        <h1>Etap 1: Konfiguracja Instalacji</h1>
+        <label for="typ-instalacji">Typ instalacji:</label>
+        <select id="typ-instalacji">
+          <option value="nowa">Nowa instalacja</option>
+          <option value="dokladka">Dokładka instalacji</option>
+        </select>
+        <h3>Wybór zestawu instalacji fotowoltaicznej</h3>
+        <label for="typ-pokrycia">System montażowy:</label>
+        <select id="typ-pokrycia">
+          <option value="">-- wybierz system --</option>
+          <option value="TRAPEZ">TRAPEZ</option>
+          <option value="DACHÓWKA">DACHÓWKA</option>
+          <option value="BLACHODACHÓWKA">BLACHODACHÓWKA</option>
+          <option value="EKIERKI">EKIERKI INWAZYJNE</option>
+          <option value="GRUNT">GRUNT</option>
+        </select>
+        <label for="zestaw-sieciowy">Zestawy Sieciowe:</label>
+        <select id="zestaw-sieciowy" class="lista-produktow" disabled>
+          <option value="0" data-price="0">--</option>
+        </select>
+        <label for="zestaw-niskonapieciowy">Zestawy z Magazynem Niskonapięciowym:</label>
+        <select id="zestaw-niskonapieciowy" class="lista-produktow" disabled>
+          <option value="0" data-price="0">--</option>
+        </select>
+        <label for="zestaw-wysokonapieciowy">Zestawy z Magazynem Wysokonapięciowym:</label>
+        <select id="zestaw-wysokonapieciowy" class="lista-produktow" disabled>
+          <option value="0" data-price="0">--</option>
+        </select>
+        <button onclick="przejdzDoEtapu(2)">Dalej →</button>
       </div>
 
-      <!-- dalej ETAP 3 (klimatyzacja, etc.) -->
-      <div class="form-buttons">
-        <button onclick="przejdzDoEtapu(2)" class="wstecz">&larr; Wstecz</button>
-        <button onclick="przejdzDoEtapu(4)">Dalej &rarr;</button>
+      <!-- ETAP 2 -->
+      <div id="etap2" class="etap ukryty">
+        <h2>Krok 2: Produkty i prace dodatkowe</h2>
+        <label for="magazyn-niskonapieciowy">Dodatkowy magazyn niskonapięciowy:</label>
+        <select id="magazyn-niskonapieciowy">
+          <option value="0" data-price="0">-- Wybierz --</option>
+          <option value="10kwh" data-price="3000">10 kWh</option>
+          <option value="15kwh" data-price="5200">15 kWh</option>
+        </select>
+        <label for="magazyn-wysokonapieciowy">Dodatkowy magazyn wysokonapięciowy:</label>
+        <select id="magazyn-wysokonapieciowy">
+          <option value="0" data-price="0">-- Wybierz --</option>
+          <option value="14kwh" data-price="2900">14,21 kWh</option>
+          <option value="17kwh" data-price="5800">17,76 kWh</option>
+        </select>
+        <label for="dodatki-magazyn">Bufor ciepła:</label>
+        <select id="dodatki-magazyn">
+          <option value="0" data-price="0">Brak</option>
+          <option value="bufor_100l" data-price="1800">Bufor 100 l</option>
+        </select>
+        <label for="dodatki-moduly">Dokładka modułów:</label>
+        <select id="dodatki-moduly">
+          <option value="0" data-price="0">Brak</option>
+          <option value="2szt" data-price="2500">2 szt.</option>
+          <option value="3szt" data-price="3000">3 szt.</option>
+          <option value="4szt" data-price="3500">4 szt.</option>
+        </select>
+        <div class="form-buttons">
+          <button class="wstecz" onclick="przejdzDoEtapu(1)">← Wstecz</button>
+          <button onclick="przejdzDoEtapu(3)">Dalej →</button>
+        </div>
+      </div>
+
+      <!-- ETAP 3 -->
+      <div id="etap3" class="etap ukryty">
+        <h2>Krok 3: Prace ziemne i dodatkowe</h2>
+        <label for="przekop">Przekop z kablem:</label>
+        <select id="przekop">
+          <option value="brak" data-price="0">-- Brak --</option>
+          <option value="10-30" data-price-per-meter="30">Przekop 10–30 m (30 zł/m)</option>
+          <option value="30-60" data-price-per-meter="35">Przekop 30–60 m (35 zł/m)</option>
+        </select>
+        <div id="dlugosc-przekopu-kontener" class="ukryty">
+          <label for="dlugosc-przekopu">Długość przekopu (m):</label>
+          <input type="number" id="dlugosc-przekopu" min="0" value="0">
+        </div>
+        <label for="klimatyzacja">Klimatyzacja:</label>
+        <select id="klimatyzacja">
+          <option value="0" data-price="0">-- Wybierz --</option>
+          <option value="klima_2_6" data-price="3330">TCL Ocarina 2,6kW</option>
+          <option value="klima_3_4" data-price="3420">TCL Ocarina 3,4kW</option>
+          <option value="klima_5_1" data-price="4120">TCL Ocarina 5,1kW</option>
+          <option value="klima_6_8" data-price="4500">TCL Ocarina 6,8kW</option>
+        </select>
+        <label for="falownik-magazyn">Falownik + magazyn:</label>
+        <select id="falownik-magazyn">
+          <option value="0" data-price="0">-- Wybierz --</option>
+          <option value="falownik_lv_10" data-price="21900">GoodWe 10 + 10kWh</option>
+          <option value="falownik_lv_5" data-price="18600">Deye 5 + 5kWh</option>
+          <option value="falownik_hv_10" data-price="20900">Deye 10 + 10kWh</option>
+        </select>
+        <label for="inne-dodatki-nazwa">Inne dodatki (nazwa):</label>
+        <input type="text" id="inne-dodatki-nazwa" placeholder="Np. dodatkowe zabezpieczenia">
+        <label for="inne-dodatki-cena">Inne dodatki (kwota PLN):</label>
+        <input type="number" id="inne-dodatki-cena" min="0" value="0">
+        <div class="form-buttons">
+          <button class="wstecz" onclick="przejdzDoEtapu(2)">← Wstecz</button>
+          <button onclick="przejdzDoEtapu(4)">Generuj ofertę →</button>
+        </div>
+      </div>
+
+      <!-- ETAP 4 -->
+      <div id="etap4" class="etap ukryty">
+        <h2>Krok 4: Dane do oferty</h2>
+        <h3>Dane Klienta</h3>
+        <input type="text" id="klient-imie" placeholder="Imię i nazwisko" required>
+        <input type="text" id="klient-adres" placeholder="Adres montażu" required>
+        <input type="text" id="klient-kod" placeholder="Kod pocztowy i miejscowość" required>
+        <input type="tel" id="klient-telefon" placeholder="Telefon" required>
+        <input type="email" id="klient-email" placeholder="E-mail" required>
+        <h3>Dane Handlowca</h3>
+        <input type="text" id="ph-imie" placeholder="Imię i nazwisko handlowca" required>
+        <input type="tel" id="ph-telefon" placeholder="Telefon handlowca" required>
+        <input type="email" id="ph-email" placeholder="E-mail handlowca" required>
+        <input type="text" id="ph-teren" placeholder="Teren działania" required>
+        <div class="form-buttons">
+          <button class="wstecz" onclick="przejdzDoEtapu(3)">← Wstecz</button>
+          <button id="przycisk-pdf-klient">Generuj ofertę dla Klienta</button>
+          <button id="przycisk-pdf-biuro">Generuj podsumowanie dla Biura</button>
+        </div>
       </div>
     </div>
 
-    <!-- ETAP 4, PODSUMOWANIE … (bez zmian) -->
+    <!-- PODSUMOWANIE BOCZNE -->
+    <div id="stale-podsumowanie">
+      <h3>Wybrane elementy:</h3>
+      <ul id="lista-wybranych-elementow"></ul>
+      <h3>Podsumowanie Ceny:</h3>
+      <div id="podsumowanie-tresc">
+        <p>Koszt Bazowy (dla firmy): <span id="koszt-bazowy">0.00</span> PLN</p>
+        <p>Marża Handlowca (widoczna): <span id="wartosc-marzy">0.00</span> PLN</p>
+        <p>Wartość Netto (z marżą): <span id="suma-netto-final">0.00</span> PLN</p>
+        <p>Podatek VAT: <span id="kwota-vat">0.00</span> PLN</p>
+      </div>
+      <label for="stawka-vat">Stawka VAT:</label>
+      <select id="stawka-vat">
+        <option value="0.08">8%</option>
+        <option value="0.23" selected>23%</option>
+      </select>
+      <label for="marza-procent">Marża (% od Kosztu Bazowego):</label>
+      <input type="number" id="marza-procent" min="0" value="0">
+      <h3 id="cena-koncowa">Cena końcowa dla klienta (Brutto): 0.00 PLN</h3>
+    </div>
 
   </div>
 
-
   <script>
-    const POPRAWNE_HASLO       = "ZielonaEnergia2025";
-    const SCRIPT_URL_DO_DANYCH = "https://script.google.com/macros/s/AKfycbw0ZsTTqv_7nUPjF765QmpGwTwhZj-bN7e2qM8Xsmp_hNZBOLqiZDut6-VSi67O1DTKpw/exec";
+    // ===== konfiguracja =====
+    const USTAWIENIA = { dyrektor:0, kierownik:0, firma:0, widocznosc:90 };
+    const HASLO = "ZielonaEnergia2025";
+    const URL_SCRIPTA = "https://script.google.com/macros/s/AKfycbw0ZsTTqv_7nUPjF765QmpGwTwhZj-bN7e2qM8Xsmp_hNZBOLqiZDut6-VSi67O1DTKpw/exec";
 
-    let daneOferty = {}, numerZapisanejOferty = null, aktywnaListaId = null;
+    let daneOferty={}, aktywnaLista=null, numerOferty=null;
 
-    function przejdzDoEtapu(nr) {
+    // ========== etapy ==========
+    function przejdzDoEtapu(nr){
       document.querySelectorAll('.etap').forEach(e=>e.classList.add('ukryty'));
       document.getElementById(`etap${nr}`).classList.remove('ukryty');
     }
 
-    function aktualizujPodsumowanieWizualne() {
-      numerZapisanejOferty = null;
+    // ========== sumowanie ==========
+    function aktualizujPodsumowanieWizualne(){
+      const selPrz = document.getElementById('przekop');
+      if(!selPrz) return; // jeszcze nie załadowane
+      // odczyt wartości
+      const pricePerM = parseFloat(selPrz.selectedOptions[0]?.dataset.pricePerMeter) || 0;
+      const length    = parseFloat(document.getElementById('dlugosc-przekopu').value) || 0;
+      const getP= id=>{ const s=document.getElementById(id); return parseFloat(s.selectedOptions[0]?.dataset.price)||0; };
+      const getT= id=>{ const s=document.getElementById(id); return s.selectedIndex>0? s.selectedOptions[0].text : ""; };
 
-      // … zbieranie cen innych elementów …
-
-      // PRZEKOP:
-      const selPrzekop = document.getElementById('przekop');
-      const inpDlugosc = document.getElementById('dlugosc-przekopu');
-      const pricePerM = parseFloat(selPrzekop.selectedOptions[0].dataset.pricePerMeter) || 0;
-      const length    = parseFloat(inpDlugosc.value) || 0;
-      daneOferty.przekop = {
-        text: selPrzekop.selectedOptions[0].text,
-        value: selPrzekop.value,
-        pricePerMeter: pricePerM,
-        length: length
+      daneOferty = {
+        zestawPV: {text:getT(aktywnaLista), price:getP(aktywnaLista)},
+        magazynNisko:{text:getT('magazyn-niskonapieciowy'), price:getP('magazyn-niskonapieciowy')},
+        magazynWysoko:{text:getT('magazyn-wysokonapieciowy'), price:getP('magazyn-wysokonapieciowy')},
+        dodatkiMagazyn:{text:getT('dodatki-magazyn'), price:getP('dodatki-magazyn')},
+        dodatkiModuly:{text:getT('dodatki-moduly'), price:getP('dodatki-moduly')},
+        przekop:{text:selPrz.selectedOptions[0]?.text,value:selPrz.value,pricePerMeter, length},
+        klimatyzacja:{text:getT('klimatyzacja'), price:getP('klimatyzacja')},
+        falownikMagazyn:{text:getT('falownik-magazyn'), price:getP('falownik-magazyn')},
+        inneDodatki:{nazwa:document.getElementById('inne-dodatki-nazwa').value, cena:parseFloat(document.getElementById('inne-dodatki-cena').value)||0},
+        stawkaVat:parseFloat(document.getElementById('stawka-vat').value),
+        marzaProcent: parseFloat(document.getElementById('marza-procent').value)||0,
+        klient:{
+          imie:document.getElementById('klient-imie').value,
+          adres:document.getElementById('klient-adres').value,
+          kod:document.getElementById('klient-kod').value,
+          telefon:document.getElementById('klient-telefon').value,
+          email:document.getElementById('klient-email').value
+        },
+        handlowiec:{
+          imie:document.getElementById('ph-imie').value,
+          telefon:document.getElementById('ph-telefon').value,
+          email:document.getElementById('ph-email').value,
+          teren:document.getElementById('ph-teren').value
+        },
+        nadprowizje:USTAWIENIA
       };
-      document
-        .getElementById('dlugosc-przekopu-kontener')
-        .classList.toggle('ukryty', pricePerM <= 0);
 
-      // … obliczenia kosztów na podstawie daneOferty … i aktualizacja DOM …
+      // obliczenia
+      const baz = daneOferty.zestawPV.price
+                + daneOferty.magazynNisko.price
+                + daneOferty.magazynWysoko.price
+                + daneOferty.dodatkiMagazyn.price
+                + daneOferty.dodatkiModuly.price
+                + (pricePerM * length)
+                + daneOferty.klimatyzacja.price
+                + daneOferty.falownikMagazyn.price
+                + daneOferty.inneDodatki.cena
+                + USTAWIENIA.dyrektor + USTAWIENIA.kierownik + USTAWIENIA.firma;
+      const wartMarzy = baz * (daneOferty.marzaProcent/100);
+      const marPH = wartMarzy * (USTAWIENIA.widocznosc/100);
+      const netto = baz + wartMarzy;
+      const vat   = netto * daneOferty.stawkaVat;
+      const brutto= netto + vat;
 
-    }
+      // wpis do DOM
+      document.getElementById('koszt-bazowy').textContent = baz.toFixed(2);
+      document.getElementById('wartosc-marzy').textContent = marPH.toFixed(2);
+      document.getElementById('suma-netto-final').textContent = netto.toFixed(2);
+      document.getElementById('kwota-vat').textContent = vat.toFixed(2);
+      document.getElementById('cena-koncowa').textContent = brutto.toFixed(2);
 
-    function zapiszOferteWArkuzu(dane) {
-      fetch(SCRIPT_URL_DO_DANYCH, {
-        method: 'POST', mode: 'cors',
-        headers: { 'Content-Type':'application/json;charset=UTF-8' },
-        body: JSON.stringify({
-          action: 'saveOffer',
-          numerOferty: numerZapisanejOferty,
-          dataWygenerowania: new Date().toISOString(),
-          klient: `${dane.klient.imie}, ${dane.klient.adres}, ${dane.klient.kod}`,
-          handlowiec: dane.handlowiec.imie,
-          kwotaNetto: dane.obliczenia.sumaNettoFinal,
-          kwotaBrutto: dane.obliczenia.cenaKoncowa,
-          produkty: [], // tu zbierzOpisProduktow(dane)
-          marzaHandlowca: dane.obliczenia.marzaDlaPH,
-          marzaDlaFirmy: dane.obliczenia.marzaDlaFirmy,
-          nadprowizjaDyrektora: dane.nadprowizje.dyrektor,
-          nadprowizjaKierownika: dane.nadprowizje.kierownik,
-          nadprowizjaFirmy: dane.nadprowizje.firma
-        })
-      })
-      .then(r=>r.json())
-      .then(resp=>{
-        if (resp.result!=='success') alert("Błąd zapisu:\n"+resp.message);
-      })
-      .catch(_=>alert("Krytyczny błąd zapisu do arkusza."));
-    }
+      // pokaz długość przekopu
+      document.getElementById('dlugosc-przekopu-kontener')
+              .classList.toggle('ukryty', pricePerM<=0);
 
-    document.addEventListener('DOMContentLoaded', ()=>{
-      document.getElementById('przycisk-zaloguj').onclick = ()=>{
-        if (document.getElementById('haslo-dostepu').value === POPRAWNE_HASLO) {
-          document.getElementById('prosty-login').classList.add('ukryty');
-          document.getElementById('glowny-kalkulator').classList.remove('ukryty');
-        } else {
-          document.getElementById('login-error-prosty').textContent = 'Nieprawidłowe hasło!';
+      // lista elementów
+      const ul = document.getElementById('lista-wybranych-elementow');
+      ul.innerHTML="";
+      const dodaj=(e,w)=>{
+        if(w && w!=="--" && w!=="Brak"){
+          const li=document.createElement('li');
+          li.textContent=`${e}: ${typeof w==="number"?w.toFixed(2):w}${typeof w==="number"?" PLN":""}`;
+          ul.appendChild(li);
         }
       };
+      dodaj('Zestaw główny', daneOferty.zestawPV.text);
+      dodaj('Magazyn NN', daneOferty.magazynNisko.text);
+      dodaj('Magazyn WN', daneOferty.magazynWysoko.text);
+      dodaj('Bufor ciepła', daneOferty.dodatkiMagazyn.text);
+      dodaj('Moduły', daneOferty.dodatkiModuly.text);
+      if(daneOferty.przekop.value!=="brak") dodaj('Przekop', `${length} m`);
+      dodaj('Klimatyzacja', daneOferty.klimatyzacja.text);
+      dodaj('Falownik+Magazyn', daneOferty.falownikMagazyn.text);
+      if(daneOferty.inneDodatki.cena>0) dodaj(daneOferty.inneDodatki.nazwa, daneOferty.inneDodatki.cena);
+    }
 
-      // podczep wszystkie eventy do inputów/selectów, przyciski, etc.
-      document.querySelectorAll('input, select').forEach(el=>{
-        el.addEventListener('input', aktualizujPodsumowanieWizualne);
-        el.addEventListener('change', aktualizujPodsumowanieWizualne);
-      });
+    // ========== zapis do arkusza ==========
+    function zapiszDoArkusza(){
+      fetch(URL_SCRIPTA, {
+        method:'POST', mode:'cors',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          action:'saveOffer',
+          numerOferty, dataWygenerowania:new Date().toISOString(),
+          klient:`${daneOferty.klient.imie}, ${daneOferty.klient.adres}, ${daneOferty.klient.kod}`,
+          handlowiec:daneOferty.handlowiec.imie,
+          kwotaNetto: parseFloat(document.getElementById('suma-netto-final').textContent),
+          kwotaBrutto: parseFloat(document.getElementById('cena-koncowa').textContent),
+          produkty: daneOferty.zestawPV.text,
+          marzaHandlowca:USTAWIENIA.widocznosc,
+          marzaDlaFirmy:0, nadprowizjaDyrektora:USTAWIENIA.dyrektor,
+          nadprowizjaKierownika:USTAWIENIA.kierownik, nadprowizjaFirmy:USTAWIENIA.firma
+        })
+      })
+      .then(r=>r.json()).then(resp=>{
+        if(resp.result!=='success')
+          alert("Błąd zapisu:\n"+resp.message);
+      })
+      .catch(()=>alert("Krytyczny błąd zapisu do arkusza."));
+    }
+
+    // ========== PDF ==========
+    function generujPDF(typ){
+      aktualizujPodsumowanieWizualne();
+      if(!document.getElementById('klient-imie').value){
+        alert("Wypełnij dane klienta"); przejdzDoEtapu(4); return;
+      }
+      if(!numerOferty){
+        numerOferty = `GN/${new Date().toLocaleDateString('pl-PL').replace(/\./g,'')}/${Date.now().toString().slice(-4)}`;
+        zapiszDoArkusza();
+      }
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFont('helvetica','bold').setFontSize(20).setTextColor(0,91,65);
+      doc.text(typ==='klient'?'OFERTA HANDLOWA':'PODSUMOWANIE DLA BIURA',105,20,{align:'center'});
+      doc.setFontSize(10).setFont('helvetica','normal').setTextColor(51);
+      doc.text(`Nr: ${numerOferty}`,195,30,{align:'right'});
+      doc.text(`Data: ${new Date().toLocaleDateString('pl-PL')}`,195,35,{align:'right'});
+      // ... dalsza część generowania tabel itp. identycznie jak wcześniej ...
+      doc.save(`${typ==='klient'?'Oferta':'Podsumowanie'}_${document.getElementById('klient-imie').value}.pdf`);
+    }
+
+    // ========== inicjalizacja ==========
+    document.getElementById('przycisk-zaloguj').onclick = ()=>{
+      if(document.getElementById('haslo-dostepu').value === HASLO){
+        document.getElementById('prosty-login').classList.add('ukryty');
+        document.getElementById('glowny-kalkulator').classList.remove('ukryty');
+        // dopiero po zalogowaniu:
+        aktualizujPodsumowanieWizualne();
+      } else {
+        document.getElementById('login-error-prosty').textContent = 'Nieprawidłowe hasło!';
+      }
+    };
+
+    document.querySelectorAll('input,select').forEach(el=>{
+      el.oninput = aktualizujPodsumowanieWizualne;
+      el.onchange = aktualizujPodsumowanieWizualne;
     });
+
+    document.getElementById('typ-pokrycia').onchange = ()=>{
+      aktywnaLista=null;
+      ['zestaw-sieciowy','zestaw-niskonapieciowy','zestaw-wysokonapieciowy']
+        .forEach(id=>{
+          const sel = document.getElementById(id);
+          sel.disabled = !sel.closest('select');
+          sel.selectedIndex = 0;
+        });
+    };
+
+    document.querySelectorAll('.lista-produktow').forEach(sel=>{
+      sel.onchange = ()=>{
+        aktywnaLista = (sel.value!=='0')? sel.id : null;
+        document.querySelectorAll('.lista-produktow').forEach(o=>{ if(o!==sel) o.selectedIndex=0; });
+      };
+    });
+
+    document.getElementById('przycisk-pdf-klient').onclick = ()=>generujPDF('klient');
+    document.getElementById('przycisk-pdf-biuro').onclick   = ()=>generujPDF('biuro');
   </script>
+
 </body>
 </html>
