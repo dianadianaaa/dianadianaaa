@@ -57,34 +57,9 @@
             <div id="etap1" class="etap"><h1>Etap 1: Konfiguracja Instalacji</h1><label for="typ-instalacji">Typ instalacji:</label><select id="typ-instalacji"><option value="nowa">Nowa instalacja</option><option value="dokladka">Dokładka instalacji</option></select><h3>Wybór zestawu instalacji fotowoltaicznej</h3><label for="typ-pokrycia">System montażowy:</label><select id="typ-pokrycia"><option value="">-- wybierz system --</option><option value="TRAPEZ">TRAPEZ</option><option value="DACHÓWKA">DACHÓWKA</option><option value="BLACHODACHÓWKA">BLACHODACHÓWKA</option><option value="EKIERKI">EKIERKI INWAZYJNE</option><option value="GRUNT">GRUNT</option></select><label for="zestaw-sieciowy">Zestawy Sieciowe:</label><select id="zestaw-sieciowy" class="lista-produktow" disabled><option value="0" data-price="0">--</option></select><label for="zestaw-niskonapieciowy">Zestawy z Magazynem Niskonapięciowym:</label><select id="zestaw-niskonapieciowy" class="lista-produktow" disabled><option value="0" data-price="0">--</option></select><label for="zestaw-wysokonapieciowy">Zestawy z Magazynem Wysokonapięciowym:</label><select id="zestaw-wysokonapieciowy" class="lista-produktow" disabled><option value="0" data-price="0">--</option></select><button onclick="przejdzDoEtapu(2)">Dalej &rarr;</button></div>
             <div id="etap2" class="etap ukryty"><h2>Krok 2: Produkty i prace dodatkowe</h2><div id="opcje-magazynu-niskonapieciowego"><label for="magazyn-niskonapieciowy">Dodatkowy magazyn niskonapięciowy:</label><select id="magazyn-niskonapieciowy"><option value="0" data-price="0">-- Wybierz --</option><option value="10kwh" data-price="3000">10 kWh</option><option value="15kwh" data-price="5200">15 kWh</option></select></div><div id="opcje-magazynu-wysokonapieciowego"><label for="magazyn-wysokonapieciowy">Dodatkowy magazyn wysokonapięciowy:</label><select id="magazyn-wysokonapieciowy"><option value="0" data-price="0">-- Wybierz --</option><option value="14kwh" data-price="2900">14,21 kWh</option><option value="17kwh" data-price="5800">17,76 kWh</option></select></div><h3>Inne dodatki</h3><label for="dodatki-magazyn">Bufor ciepła:</label><select id="dodatki-magazyn"><option value="0" data-price="0">Brak</option><option value="bufor_100l" data-price="1800">Bufor 100 l</option></select><label for="dodatki-moduly">Dokładka modułów:</label><select id="dodatki-moduly"><option value="0" data-price="0">Brak</option><option value="2szt" data-price="2500">2 szt.</option><option value="3szt" data-price="3000">3 szt.</option><option value="4szt" data-price="3500">4 szt.</option></select><div class="form-buttons"><button onclick="przejdzDoEtapu(1)" class="wstecz">&larr; Wstecz</button><button onclick="przejdzDoEtapu(3)">Dalej &rarr;</button></div></div>
             <div id="etap3" class="etap ukryty"><h2>Krok 3: Prace ziemne i dodatkowe</h2><label for="przekop">Przekop z kablem:</label><select id="przekop"><option value="brak" data-price="0">-- Brak --</option><option value="do10" data-price-per-meter="0" data-price="0">Przekop z kablem do 10 m</option><option value="10-30" data-price-per-meter="30">Przekop 10–30 m (30 zł/m)</option><option value="30-60" data-price-per-meter="35">Przekop 30–60 m (35 zł/m)</option><option value="powyzej60" data-price-per-meter="0" data-price="0">Przekop powyżej 60 m (wycena indywidualna)</option></select><div id="dlugosc-przekopu-kontener" class="ukryty"><label for="dlugosc-przekopu">Długość przekopu (w metrach):</label><input type="number" id="dlugosc-przekopu" min="0" value="0"></div><label for="klimatyzacja">Klimatyzacja:</label><select id="klimatyzacja"><option value="0" data-price="0">-- Wybierz --</option><option value="klima_2_6" data-price="3330">Klimatyzacja TCL Ocarina 2,6kW</option><option value="klima_3_4" data-price="3420">Klimatyzacja TCL Ocarina 3,4kW</option><option value="klima_5_1" data-price="4120">Klimatyzacja TCL Ocarina 5,1kW</option><option value="klima_6_8" data-price="4500">Klimatyzacja TCL Ocarina 6,8kW</option></select><label for="falownik-magazyn">Falownik + Magazyn energii:</label><select id="falownik-magazyn"><option value="0" data-price="0">-- Wybierz --</option><option value="falownik_lv_10" data-price="21900">Falownik LV (GoodWe 10) + magazyn 10kWh</option><option value="falownik_lv_5" data-price="18600">Falownik LV (Deye 5) + magazyn 5kWh</option><option value="falownik_hv_10" data-price="20900">Falownik HV (Deye 10) + magazyn 10kWh</option></select><label for="inne-dodatki-nazwa">Inne dodatki (nazwa):</label><input type="text" id="inne-dodatki-nazwa" placeholder="Np. Dodatkowe zabezpieczenia"><label for="inne-dodatki-cena">Inne dodatki (kwota w PLN):</label><input type="number" id="inne-dodatki-cena" min="0" value="0"><div class="form-buttons"><button onclick="przejdzDoEtapu(2)" class="wstecz">&larr; Wstecz</button><button onclick="przejdzDoEtapu(4)">Generuj ofertę &rarr;</button></div></div>
-            <div id="etap4" class="etap ukryty">
-                <h2>Krok 4: Dane do oferty</h2>
-                <div id="formularz-danych">
-                    <h3>Dane Klienta</h3>
-                    <input type="text" id="klient-imie" placeholder="Imię i nazwisko" required><input type="text" id="klient-adres" placeholder="Adres montażu" required><input type="text" id="klient-kod" placeholder="Kod pocztowy i miejscowość" required><input type="tel" id="klient-telefon" placeholder="Telefon" required><input type="email" id="klient-email" placeholder="E-mail" required>
-                    <h3>Dane Handlowca</h3>
-                    <input type="text" id="ph-imie" placeholder="Imię i nazwisko handlowca" required><input type="tel" id="ph-telefon" placeholder="Telefon handlowca" required><input type="email" id="ph-email" placeholder="E-mail handlowca" required><input type="text" id="ph-teren" placeholder="Teren działania" required>
-                    <div class="form-buttons">
-                        <button type="button" onclick="przejdzDoEtapu(3)" class="wstecz">&larr; Wstecz</button>
-                        <button type="button" id="przycisk-pdf-klient">Generuj ofertę dla Klienta</button>
-                        <button type="button" id="przycisk-pdf-biuro">Generuj podsumowanie dla Biura</button>
-                    </div>
-                </div>
-            </div>
+            <div id="etap4" class="etap ukryty"><h2>Krok 4: Dane do oferty</h2><div id="formularz-danych"><h3>Dane Klienta</h3><input type="text" id="klient-imie" placeholder="Imię i nazwisko" required><input type="text" id="klient-adres" placeholder="Adres montażu" required><input type="text" id="klient-kod" placeholder="Kod pocztowy i miejscowość" required><input type="tel" id="klient-telefon" placeholder="Telefon" required><input type="email" id="klient-email" placeholder="E-mail" required><h3>Dane Handlowca</h3><input type="text" id="ph-imie" placeholder="Imię i nazwisko handlowca" required><input type="tel" id="ph-telefon" placeholder="Telefon handlowca" required><input type="email" id="ph-email" placeholder="E-mail handlowca" required><input type="text" id="ph-teren" placeholder="Teren działania" required><div class="form-buttons"><button type="button" onclick="przejdzDoEtapu(3)" class="wstecz">&larr; Wstecz</button><button type="button" id="przycisk-pdf-klient">Generuj ofertę dla Klienta</button><button type="button" id="przycisk-pdf-biuro">Generuj podsumowanie dla Biura</button></div></div></div>
         </div>
-        <div id="stale-podsumowanie">
-            <h3>Wybrane elementy:</h3><ul id="lista-wybranych-elementow"></ul>
-            <h3>Podsumowanie Ceny:</h3>
-            <div id="podsumowanie-tresc">
-                <p>Koszt Bazowy (dla firmy): <span id="koszt-bazowy">0.00</span> PLN</p>
-                <p>Marża Handlowca (widoczna): <span id="wartosc-marzy">0.00</span> PLN</p>
-                <p>Wartość Netto (z marżą): <span id="suma-netto-final">0.00</span> PLN</p>
-                <p>Podatek VAT: <span id="kwota-vat">0.00</span> PLN</p>
-            </div>
-            <label for="stawka-vat">Stawka VAT:</label><select id="stawka-vat"><option value="0.08">8%</option><option value="0.23">23%</option></select>
-            <label for="marza-procent">Marża (% od Kosztu Bazowego):</label><input type="number" id="marza-procent" min="0" value="0">
-            <h3 id="cena-koncowa-naglowek">Cena końcowa dla klienta (Brutto): <span id="cena-koncowa">0.00 PLN</span></h3>
-        </div>
+        <div id="stale-podsumowanie"><h3>Wybrane elementy:</h3><ul id="lista-wybranych-elementow"></ul><h3>Podsumowanie Ceny:</h3><div id="podsumowanie-tresc"><p>Koszt Bazowy (dla firmy): <span id="koszt-bazowy">0.00</span> PLN</p><p>Marża Handlowca (widoczna): <span id="wartosc-marzy">0.00</span> PLN</p><p>Wartość Netto (z marżą): <span id="suma-netto-final">0.00</span> PLN</p><p>Podatek VAT: <span id="kwota-vat">0.00</span> PLN</p></div><label for="stawka-vat">Stawka VAT:</label><select id="stawka-vat"><option value="0.08">8%</option><option value="0.23">23%</option></select><label for="marza-procent">Marża (% od Kosztu Bazowego):</label><input type="number" id="marza-procent" min="0" value="0"><h3 id="cena-koncowa-naglowek">Cena końcowa dla klienta (Brutto): <span id="cena-koncowa">0.00 PLN</span></h3></div>
     </div>
 
 <script>
@@ -94,8 +69,9 @@
         'nadprowizja-firmy': 0,
         'marza-widocznosc': 90
     };
-    const SCRIPT_URL_DO_DANYCH = "!!! https://script.google.com/macros/s/AKfycbyDyE-M1p695mJwz26cJTgpmWGvI8vhl5ZNUxMCrSUBBNR1yjyy5ktAM0KhapBshH937g/exec !!!";
+    const SCRIPT_URL_DO_DANYCH = "!!!https://script.google.com/macros/s/AKfycbzr9sWbZpdA1SeBF1fgEEgM4U_kCVdy7V82LsCowxsoMPvg8oo0X2uMon-w_yAGueopQQ/exec!!!";
     const POPRAWNE_HASLO = "ZielonaEnergia2025";
+
     let daneOferty = {}, aktywnaListaId = null, numerZapisanejOferty = null;
     
     function przejdzDoEtapu(nr) {
@@ -222,7 +198,7 @@
     }
 
     function zapiszOferteWArkuzu(dane) {
-        if (!SCRIPT_URL_DO_DANYCH || SCRIPT_URL_DO_DANYCH.includes("https://script.google.com/macros/s/AKfycbyDyE-M1p695mJwz26cJTgpmWGvI8vhl5ZNUxMCrSUBBNR1yjyy5ktAM0KhapBshH937g/exec")) {
+        if (!SCRIPT_URL_DO_DANYCH || SCRIPT_URL_DO_DANYCH.includes("https://script.google.com/macros/s/AKfycbzr9sWbZpdA1SeBF1fgEEgM4U_kCVdy7V82LsCowxsoMPvg8oo0X2uMon-w_yAGueopQQ/exec ")) {
             console.log("Zapis do arkusza pominięty - brak poprawnego URL skryptu.");
             return;
         }
