@@ -103,7 +103,7 @@
     };
     // ==================================================================
 
-    const SCRIPT_URL_DO_DANYCH = "https://script.google.com/macros/s/AKfycbzcgMko8uZBRFH8xiFW8VyDUHIZoWt2esjVXfXSAI0V_39cqf0iY0CXZVQ744JLrOn7Ug/exec";
+    const SCRIPT_URL_DO_DANYCH = "https://script.google.com/macros/s/AKfycbwZ2Wo5rdW3JZPcOfMKjXOYHURws1_iDaTumCfajRxpnvevq110iuJgGoMSUYrpa5RARA/exec";
     const POPRAWNE_HASLO = "ZielonaEnergia2025";
 
     let daneOferty = {};
@@ -233,7 +233,7 @@
     }
 
     function zapiszOferteWArkuzu(dane) {
-        if (!SCRIPT_URL_DO_DANYCH || SCRIPT_URL_DO_DANYCH.includes("TUTAJ_WSTAW")) {
+        if (!SCRIPT_URL_DO_DANYCH || SCRIPT_URL_DO_DANYCH.includes("https://script.google.com/macros/s/AKfycbwZ2Wo5rdW3JZPcOfMKjXOYHURws1_iDaTumCfajRxpnvevq110iuJgGoMSUYrpa5RARA/exec")) {
             console.log("Zapis do arkusza pominięty - brak poprawnego URL skryptu.");
             return;
         }
