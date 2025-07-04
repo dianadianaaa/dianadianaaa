@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://script.google.com https://script.googleusercontent.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://script.google.com https://script.googleusercontent.com;">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kalkulator Green Now</title>
     
@@ -96,12 +96,11 @@
     // === PANEL KONTROLNY ===
     // ==================================================================
     // Zmieniaj wartości poniżej, aby na stałe ustawić prowizje i marże.
-    // Kalkulator użyje tych wartości do wszystkich obliczeń.
     const USTAWIENIA_GLOBALNE = {
         'nadprowizja-dyrektora': 0,
         'nadprowizja-kierownika': 0,
         'nadprowizja-firmy': 0,
-        'marza-widocznosc': 90 // Widoczność marży w procentach (np. 90 dla 90%)
+        'marza-widocznosc': 90 
     };
     // ==================================================================
 
@@ -160,7 +159,7 @@
         const sumaNettoFinal = kosztBazowy + wartoscMarzyCalkowita;
         const kwotaVat = sumaNettoFinal * daneOferty.stawkaVat;
         const cenaKoncowa = sumaNettoFinal + kwotaVat;
-        daneOferty.obliczenia = { kosztBazowy, sumaNettoFinal, kwotaVat, cenaKoncowa, marzaDlaPH, marzaDlaFirmy, wartoscMarzyCalkowita };
+        daneOferty.obliczenia = { kosztBazowy, sumaNettoFinal, kwotaVat, cenaKoncowa, marzaDlaPH, marzaDlaFirmy };
         document.getElementById('koszt-bazowy').textContent = kosztBazowy.toFixed(2);
         document.getElementById('wartosc-marzy').textContent = marzaDlaPH.toFixed(2);
         document.getElementById('suma-netto-final').textContent = sumaNettoFinal.toFixed(2);
@@ -186,7 +185,7 @@
         dodajDoListy('Klimatyzacja', daneOferty.klimatyzacja.text);
         dodajDoListy('Dod. Falownik+Magazyn', daneOferty.falownikMagazyn.text);
         if(daneOferty.inneDodatki.cena > 0) dodajDoListy(daneOferty.inneDodatki.nazwa || 'Inne dodatki', daneOferty.inneDodatki.cena);
-    }
+    };
     
     function wypelnijListe(selectElement, kategoria, typPokrycia) {
         const zachowanyValue = selectElement.value;
@@ -357,34 +356,48 @@
         y = doc.lastAutoTable.finalY;
         const nazwaPliku = `${typ === 'klient' ? 'Oferta' : 'Podsumowanie'}_${daneOferty.klient.imie.replace(/[^a-z0-9]/gi, '_')}.pdf`;
         doc.save(nazwaPliku);
-    };
+    }
     
-    document.querySelectorAll('input, select').forEach(element => {
-        element.addEventListener('input', aktualizujPodsumowanieWizualne);
-        element.addEventListener('change', aktualizujPodsumowanieWizualne);
-    });
-    document.getElementById('typ-pokrycia').addEventListener('change', () => {
-        aktywnaListaId = null;
+    // PONIŻEJ POPRAWIONA KOLEJNOŚĆ PODPINANIA FUNKCJI
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('przycisk-zaloguj').addEventListener('click', () => {
+            if (document.getElementById('haslo-dostepu').value === POPRAWNE_HASLO) {
+                document.getElementById('prosty-login').classList.add('ukryty');
+                document.getElementById('glowny-kalkulator').classList.remove('ukryty');
+            } else {
+                document.getElementById('login-error-prosty').textContent = 'Nieprawidłowe hasło!';
+            }
+        });
+        document.getElementById('haslo-dostepu').addEventListener('keyup', (event) => { if (event.key === 'Enter') document.getElementById('przycisk-zaloguj').click(); });
+        
+        document.querySelectorAll('input, select').forEach(element => {
+            element.addEventListener('input', aktualizujPodsumowanieWizualne);
+            element.addEventListener('change', aktualizujPodsumowanieWizualne);
+        });
+        document.getElementById('typ-pokrycia').addEventListener('change', () => {
+            aktywnaListaId = null;
+            odswiezWszystkieListy();
+            aktualizujPodsumowanieWizualne();
+        });
+        document.querySelectorAll('.lista-produktow').forEach(obecnaLista => {
+            obecnaLista.addEventListener('change', () => {
+                if (obecnaLista.value !== '0') {
+                    aktywnaListaId = obecnaLista.id;
+                    document.querySelectorAll('.lista-produktow').forEach(innaLista => {
+                        if (innaLista.id !== obecnaLista.id) { innaLista.selectedIndex = 0; }
+                    });
+                } else {
+                    aktywnaListaId = null;
+                }
+                aktualizujPodsumowanieWizualne();
+            });
+        });
+        document.getElementById('przycisk-pdf-klient').addEventListener('click', () => generujPDF('klient'));
+        document.getElementById('przycisk-pdf-biuro').addEventListener('click', () => generujPDF('biuro'));
+        
         odswiezWszystkieListy();
         aktualizujPodsumowanieWizualne();
     });
-    document.querySelectorAll('.lista-produktow').forEach(obecnaLista => {
-        obecnaLista.addEventListener('change', () => {
-            if (obecnaLista.value !== '0') {
-                aktywnaListaId = obecnaLista.id;
-                document.querySelectorAll('.lista-produktow').forEach(innaLista => {
-                    if (innaLista.id !== obecnaLista.id) { innaLista.selectedIndex = 0; }
-                });
-            } else {
-                aktywnaListaId = null;
-            }
-            aktualizujPodsumowanieWizualne();
-        });
-    });
-    document.getElementById('przycisk-pdf-klient').addEventListener('click', () => generujPDF('klient'));
-    document.getElementById('przycisk-pdf-biuro').addEventListener('click', () => generujPDF('biuro'));
-    
-    odswiezWszystkieListy();
 </script>
 </body>
 </html>
