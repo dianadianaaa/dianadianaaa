@@ -69,7 +69,6 @@
         'nadprowizja-firmy': 0,
         'marza-widocznosc': 90
     };
-    // === POPRAWIONY ADRES URL ===
     const SCRIPT_URL_DO_DANYCH = "https://script.google.com/macros/s/AKfycbzmgBCoEwT8-hQsaXNMAkr6lD_uMLY7IESp-zJhyDrtRd1TkJeMfMW_B8T9EEPYCQM2tg/exec";
     const POPRAWNE_HASLO = "ZielonaEnergia2025";
 
@@ -215,7 +214,6 @@
             nadprowizjaFirmy: dane.nadprowizje.firma
         };
 
-        // === POPRAWIONA FUNKCJA FETCH ===
         fetch(SCRIPT_URL_DO_DANYCH, {
             method: 'POST',
             mode: 'cors',
@@ -249,14 +247,102 @@
             numerZapisanejOferty = `GN/${dzisiaj.getDate().toString().padStart(2, '0')}${(dzisiaj.getMonth() + 1).toString().padStart(2, '0')}${dzisiaj.getFullYear()}/${String(Date.now()).slice(-4)}`;
             zapiszOferteWArkuzu(daneOferty);
         }
+        
+        // === POCZĄTEK WSTAWIONEGO KODU PDF ===
         const numerOfertyDoPDF = numerZapisanejOferty;
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        // ... Tutaj umieść resztę Twojej logiki do generowania PDF ...
-        // (pozostawiam bez zmian, ponieważ nie dotyczyła błędu)
-        // np. doc.text("To jest przykładowy PDF", 10, 10);
-        // doc.save(`oferta-${numerOfertyDoPDF}.pdf`);
-        alert("Generowanie PDF nie jest w pełni zaimplementowane w tym przykładzie, ale dane zostały wysłane do Arkusza.");
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFillColor(244, 247, 246);
+        doc.rect(0, 0, 210, 45, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(20);
+        doc.setTextColor(0, 91, 65);
+        doc.text(typ === 'klient' ? "OFERTA HANDLOWA" : "PODSUMOWANIE DLA BIURA", 105, 20, { align: 'center' });
+        
+        const dzisiaj = new Date();
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(51, 51, 51);
+        doc.text(`Nr oferty: ${numerOfertyDoPDF}`, 195, 30, { align: 'right' });
+        doc.text(`Data: ${dzisiaj.toLocaleDateString('pl-PL')}`, 195, 35, { align: 'right' });
+        
+        let y = 55;
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(0, 91, 65);
+        doc.text("Nabywca:", 20, y);
+        doc.text("Sprzedawca:", 110, y);
+        
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(51, 51, 51);
+        doc.text(daneOferty.klient.imie, 20, y + 7);
+        doc.text(daneOferty.klient.adres, 20, y + 12);
+        doc.text(daneOferty.klient.kod, 20, y + 17);
+        doc.text(`Tel: ${daneOferty.klient.telefon}`, 20, y + 22);
+        doc.text(`Email: ${daneOferty.klient.email}`, 20, y + 27);
+        
+        doc.setFont('helvetica', 'bold');
+        doc.text("GREEN NOW SP. Z O.O.", 110, y + 7);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Przedstawiciel: ${daneOferty.handlowiec.imie}`, 110, y + 12);
+        doc.text(`Tel: ${daneOferty.handlowiec.telefon}`, 110, y + 17);
+        doc.text(`Email: ${daneOferty.handlowiec.email}`, 110, y + 22);
+        
+        y += 40;
+        
+        const specyfikacjaBody = [];
+        const listaElementow = document.getElementById('lista-wybranych-elementow').children;
+        for (let i = 0; i < listaElementow.length; i++) {
+            const textContent = listaElementow[i].textContent;
+            const separatorIndex = textContent.indexOf(':');
+            const etykieta = textContent.substring(0, separatorIndex);
+            const opis = textContent.substring(separatorIndex + 1).trim();
+            specyfikacjaBody.push([specyfikacjaBody.length + 1, etykieta, opis]);
+        }
+        
+        doc.autoTable({
+            startY: y,
+            head: [['Lp.', 'Element', 'Opis']],
+            body: specyfikacjaBody,
+            theme: 'striped',
+            headStyles: { fillColor: [0, 91, 65], font: 'helvetica', fontStyle: 'bold' },
+            styles: { font: 'helvetica', cellPadding: 2.5 },
+            columnStyles: { 0: { cellWidth: 10 } }
+        });
+        
+        y = doc.lastAutoTable.finalY + 10;
+        
+        const { sumaNettoFinal, kwotaVat, cenaKoncowa, marzaDlaPH } = daneOferty.obliczenia;
+        
+        const cenyBodyKlient = [
+            [`Wartosc Netto:`, `${sumaNettoFinal.toFixed(2)} PLN`],
+            [`Podatek VAT (${(daneOferty.stawkaVat * 100).toFixed(0)}%):`, `${kwotaVat.toFixed(2)} PLN`],
+            [{ content: 'Wartosc Brutto:', styles: { font: 'helvetica', fontStyle: 'bold', fontSize: 11, fillColor: [224, 255, 230] } }, { content: `${cenaKoncowa.toFixed(2)} PLN`, styles: { font: 'helvetica', fontStyle: 'bold', fontSize: 11, fillColor: [224, 255, 230] } }]
+        ];
+        
+        const cenyBodyBiuro = [
+            [{content: 'SUMA Netto (dla klienta):', styles: {fontStyle: 'bold'}}, {content: `${sumaNettoFinal.toFixed(2)} PLN`, styles: {fontStyle: 'bold'}}],
+            ['Marża dla Handlowca (widoczna):', `${marzaDlaPH.toFixed(2)} PLN`],
+            ['Podatek VAT:', `${kwotaVat.toFixed(2)} PLN`],
+            [{ content: 'SUMA Brutto (dla klienta):', styles: { font: 'helvetica', fontStyle: 'bold', fillColor: '#f0f0f0' } }, { content: `${cenaKoncowa.toFixed(2)} PLN`, styles: { font: 'helvetica', fontStyle: 'bold', fillColor: '#f0f0f0' } }]
+        ];
+        
+        doc.autoTable({
+            startY: y,
+            body: typ === 'klient' ? cenyBodyKlient : cenyBodyBiuro,
+            theme: 'grid',
+            styles: { font: 'helvetica' },
+            columnStyles: { 0: { fontStyle: 'bold' }, 1: { halign: 'right' } }
+        });
+        
+        y = doc.lastAutoTable.finalY;
+        
+        const nazwaPliku = `${typ === 'klient' ? 'Oferta' : 'Podsumowanie'}_${daneOferty.klient.imie.replace(/[^a-z0-9]/gi, '_')}.pdf`;
+        doc.save(nazwaPliku);
+        // === KONIEC WSTAWIONEGO KODU PDF ===
     };
     
     document.addEventListener('DOMContentLoaded', () => {
