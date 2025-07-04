@@ -23,7 +23,7 @@
         label { display: block; margin-top: 15px; margin-bottom: 8px; font-weight: bold; font-size: 0.9em; color: #555; }
         input, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; background-color: #f9f9f9; transition: border-color 0.2s, box-shadow 0.2s; }
         input:focus, select:focus { border-color: #008170; outline: none; box-shadow: 0 0 0 3px rgba(0, 129, 112, 0.15); }
-        select:disabled { background-color: #e9ecef; cursor: not-allowed; opacity: 0.7; }
+        select:disabled, input[readonly] { background-color: #e9ecef; cursor: not-allowed; opacity: 0.7; }
         button { background-color: #008170; color: white; padding: 12px 25px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 30px; font-weight: bold; width: 100%; transition: background-color 0.3s, transform 0.1s; }
         button:hover { background-color: #005b41; }
         button:active { transform: scale(0.98); }
@@ -31,20 +31,7 @@
         .form-buttons button { width: 100%; margin-top: 0; }
         button.wstecz { background-color: #6c757d; }
         button.wstecz:hover { background-color: #5a6268; }
-        #przycisk-pdf-klient { background-color: #239d60; }
-        #przycisk-pdf-klient:hover { background-color: #1a7448; }
-        #przycisk-pdf-biuro { background-color: #555; }
-        #przycisk-pdf-biuro:hover { background-color: #333; }
         .ukryty { display: none; }
-        #stale-podsumowanie { border: 2px solid #008170; border-radius: 8px; margin-top: 40px; padding: 20px; background-color: #fafffd; }
-        #lista-wybranych-elementow { list-style-type: none; padding-left: 0; margin-bottom: 20px; }
-        #lista-wybranych-elementow li { background-color: #e8f5e9; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; font-size: 0.9em; }
-        #podsumowanie-tresc p { font-size: 1em; padding: 8px 5px; border-bottom: 1px solid #eee; margin: 0; display: flex; justify-content: space-between; align-items: center; }
-        #podsumowanie-tresc p:last-child { border-bottom: none; }
-        #podsumowanie-tresc span { font-weight: bold; }
-        #cena-koncowa { color: #008170; font-size: 1.7em; font-weight: bold; }
-        #stale-podsumowanie h3#cena-koncowa-naglowek { text-align: center; font-size: 1.3em; margin-top: 25px; margin-bottom: 10px; }
-        #login-error-prosty { color: #d9534f; margin-top: 15px; font-weight: bold; height: 20px; text-align: center; }
         .mini-admin-panel { background-color: #fffbe6; border: 1px solid #ffeeba; border-radius: 8px; padding: 15px; margin: 25px 0; }
         #przycisk-wlasciciela { background-color: #ffc107; color: #333; margin-top: 15px; }
         #przycisk-wlasciciela:hover { background-color: #e0a800; }
@@ -68,17 +55,17 @@
             <div id="etap4" class="etap ukryty">
                 <h2>Krok 4: Dane do oferty</h2>
                 <div id="panel-wlasciciela" class="mini-admin-panel ukryty">
-                    <h3>Ustawienia Prowizji</h3>
+                    <h3>Ustawienia Globalne (z Arkusza Google)</h3>
                     <label for="nadprowizja-dyrektora">Nadprowizja Dyrektora (PLN netto):</label>
-                    <input type="number" class="admin-input" id="nadprowizja-dyrektora" value="0" min="0">
+                    <input type="number" class="admin-input" id="nadprowizja-dyrektora" readonly>
                     <label for="nadprowizja-kierownika">Nadprowizja Kierownika (PLN netto):</label>
-                    <input type="number" class="admin-input" id="nadprowizja-kierownika" value="0" min="0">
+                    <input type="number" class="admin-input" id="nadprowizja-kierownika" readonly>
                     <label for="nadprowizja-firmy">Dodatkowa marża dla firmy (PLN netto):</label>
-                    <input type="number" class="admin-input" id="nadprowizja-firmy" value="0" min="0">
-                    <hr>
+                    <input type="number" class="admin-input" id="nadprowizja-firmy" readonly>
+                    <label for="nazwa-grupy">Nazwa grupy:</label>
+                    <input type="text" class="admin-input" id="nazwa-grupy" readonly>
                     <label for="marza-widocznosc">Widoczność marży dla PH (%):</label>
-                    <input type="number" class="admin-input" id="marza-widocznosc" value="100" min="0" max="100">
-                    <button id="przycisk-zapisz-ustawienia" style="background-color: #f0ad4e; margin-top: 20px;">Zapisz ustawienia na stałe</button>
+                    <input type="number" class="admin-input" id="marza-widocznosc" readonly>
                 </div>
                 <div id="formularz-danych">
                     <h3>Dane Klienta</h3>
@@ -106,11 +93,11 @@
             <label for="marza-procent">Marża (% od Kosztu Bazowego):</label><input type="number" id="marza-procent" min="0" value="0">
             <h3 id="cena-koncowa-naglowek">Cena końcowa dla klienta (Brutto): <span id="cena-koncowa">0.00 PLN</span></h3>
         </div>
-        <button id="przycisk-wlasciciela">Ustawienia Właściciela</button>
+        <button id="przycisk-wlasciciela">Pokaż / Ukryj Ustawienia Globalne</button>
     </div>
 
 <script>
-    const SCRIPT_URL_DO_DANYCH = "https://script.google.com/macros/s/AKfycbzMibmDxbFNY4pC4_5U5XC1NhpShuQVFJDJLdnzZOr9Wlf3NQquhnTfrjFMUvb6hF6EcA/exec";
+    const SCRIPT_URL_DO_DANYCH = "https://script.google.com/macros/s/AKfycbwBqxHxSHhR07fyoz8oDcPDaB1d0-MjGl731AzFXuJe-FtYs6TZXfyBXwcLXWeXHMtCRQ/exec";
 
     let daneOferty = {};
     let aktywneUstawieniaAdmina = {};
@@ -118,7 +105,7 @@
     let numerZapisanejOferty = null;
     
     const pobierzUstawieniaZArkusza = () => {
-        if (SCRIPT_URL_DO_DANYCH === "https://script.google.com/macros/s/AKfycbzMibmDxbFNY4pC4_5U5XC1NhpShuQVFJDJLdnzZOr9Wlf3NQquhnTfrjFMUvb6hF6EcA/exec") {
+        if (SCRIPT_URL_DO_DANYCH.includes("TUTAJ_WKLEJ")) {
              alert("KRYTYCZNY BŁĄD: Musisz wkleić swój adres URL z Google Apps Script do pliku HTML, aby aplikacja mogła działać.");
              return;
         }
@@ -129,12 +116,14 @@
             })
             .then(settings => {
                 if (settings.error) throw new Error(settings.error);
+                
                 aktywneUstawieniaAdmina = settings;
                 document.getElementById('nadprowizja-dyrektora').value = settings['nadprowizja-dyrektora'] || 0;
                 document.getElementById('nadprowizja-kierownika').value = settings['nadprowizja-kierownika'] || 0;
                 document.getElementById('nadprowizja-firmy').value = settings['nadprowizja-firmy'] || 0;
+                document.getElementById('nazwa-grupy').value = settings['nazwa-grupy'] || 'BRAK';
                 document.getElementById('marza-widocznosc').value = settings['marza-widocznosc'] || 100;
-                document.querySelectorAll('.admin-input').forEach(input => input.readOnly = true);
+                
                 aktualizujPodsumowanieWizualne();
             })
             .catch(error => {
@@ -160,14 +149,8 @@
     document.getElementById('haslo-dostepu').addEventListener('keyup', (event) => { if (event.key === 'Enter') document.getElementById('przycisk-zaloguj').click(); });
     
     document.getElementById('przycisk-wlasciciela').addEventListener('click', () => {
-        const haslo = prompt("Podaj hasło właściciela:");
-        if (haslo === HASLO_WLASCICIELA) {
-            const panel = document.getElementById('panel-wlasciciela');
-            panel.classList.toggle('ukryty');
-            panel.querySelectorAll('.admin-input').forEach(input => input.readOnly = panel.classList.contains('ukryty'));
-        } else if (haslo) {
-            alert("Nieprawidłowe hasło właściciela!");
-        }
+        const panel = document.getElementById('panel-wlasciciela');
+        panel.classList.toggle('ukryty');
     });
 
     window.przejdzDoEtapu = (numerEtapu) => {
@@ -703,37 +686,6 @@
         });
     };
 
-    const zapiszUstawienia = () => {
-        const ustawieniaDoZapisu = {
-            'nadprowizja-dyrektora': parseFloat(document.getElementById('nadprowizja-dyrektora').value) || 0,
-            'nadprowizja-kierownika': parseFloat(document.getElementById('nadprowizja-kierownika').value) || 0,
-            'nadprowizja-firmy': parseFloat(document.getElementById('nadprowizja-firmy').value) || 0,
-            'marza-widocznosc': parseFloat(document.getElementById('marza-widocznosc').value) || 100
-        };
-        const payload = {
-            action: 'saveSettings',
-            settings: ustawieniaDoZapisu
-        };
-        fetch(SCRIPT_URL_DO_DANYCH, {
-            method: 'POST',
-            mode: 'cors',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify(payload)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.result === 'success') {
-                alert('Ustawienia zostały zapisane na stałe!');
-            } else {
-                alert('Wystąpił błąd podczas zapisu ustawień: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error("Błąd zapisu ustawień:", error);
-            alert("Błąd krytyczny: Nie udało się wysłać ustawień.");
-        });
-    };
-
     const generujPDF = (typ) => {
         aktualizujPodsumowanieWizualne(); 
         if (!daneOferty.klient.imie) {
@@ -842,7 +794,6 @@
     });
     document.getElementById('przycisk-pdf-klient').addEventListener('click', () => generujPDF('klient'));
     document.getElementById('przycisk-pdf-biuro').addEventListener('click', () => generujPDF('biuro'));
-    document.getElementById('przycisk-zapisz-ustawienia').addEventListener('click', zapiszUstawienia);
     
     odswiezWszystkieListy();
 </script>
