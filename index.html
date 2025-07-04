@@ -31,6 +31,10 @@
         .form-buttons button { width: 100%; margin-top: 0; }
         button.wstecz { background-color: #6c757d; }
         button.wstecz:hover { background-color: #5a6268; }
+        #przycisk-pdf-klient { background-color: #239d60; }
+        #przycisk-pdf-klient:hover { background-color: #1a7448; }
+        #przycisk-pdf-biuro { background-color: #555; }
+        #przycisk-pdf-biuro:hover { background-color: #333; }
         .ukryty { display: none; }
         #stale-podsumowanie { border: 2px solid #008170; border-radius: 8px; margin-top: 40px; padding: 20px; background-color: #fafffd; }
         #lista-wybranych-elementow { list-style-type: none; padding-left: 0; margin-bottom: 20px; }
@@ -92,6 +96,7 @@
     // === PANEL KONTROLNY ===
     // ==================================================================
     // Zmieniaj wartości poniżej, aby na stałe ustawić prowizje i marże.
+    // Kalkulator użyje tych wartości do wszystkich obliczeń.
     const USTAWIENIA_GLOBALNE = {
         'nadprowizja-dyrektora': 0,
         'nadprowizja-kierownika': 0,
@@ -106,8 +111,6 @@
     let daneOferty = {};
     let aktywnaListaId = null;
     let numerZapisanejOferty = null;
-    
-    document.addEventListener('DOMContentLoaded', aktualizujPodsumowanieWizualne);
     
     document.getElementById('przycisk-zaloguj').addEventListener('click', () => {
         if (document.getElementById('haslo-dostepu').value === POPRAWNE_HASLO) {
