@@ -1,7 +1,7 @@
 ## Hi there 👋
 
 <!--
-**dianadianaaa/dianadianaaa** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
+**GREEN/NOW* is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
 
 Here are some ideas to get you started:
 
